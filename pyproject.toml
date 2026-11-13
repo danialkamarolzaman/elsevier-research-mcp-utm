@@ -1,0 +1,53 @@
+[project]
+name = 'elsevier-research-mcp-utm'
+version = '0.1.0'
+description = 'Unofficial MCP server and Claude Code plugin for the Elsevier Scopus and ScienceDirect APIs, with UTM Library download limits built in.'
+readme = 'README.md'
+license = 'MIT'
+license-files = ['LICENSE']
+authors = [{ name = 'danialkamarolzaman' }]
+requires-python = '>=3.10'
+dependencies = [
+    'mcp>=2.3,<3',
+    'httpx>=0.27',
+]
+keywords = ['mcp', 'elsevier', 'scopus', 'sciencedirect', 'literature-review', 'claude']
+classifiers = [
+    'Programming Language :: Python :: 3',
+    'Operating System :: OS Independent',
+    'Topic :: Scientific/Engineering',
+]
+
+[project.urls]
+Homepage = 'https://github.com/danialkamarolzaman/elsevier-research-mcp-utm'
+Issues = 'https://github.com/danialkamarolzaman/elsevier-research-mcp-utm/issues'
+
+[project.scripts]
+elsevier-research-mcp-utm = 'elsevier_research_mcp_utm.__main__:main'
+
+[dependency-groups]
+dev = [
+    'pytest>=8',
+    'respx>=0.21',
+    'ruff>=0.6',
+]
+
+[build-system]
+requires = ['hatchling>=1.26']
+build-backend = 'hatchling.build'
+
+[tool.hatch.build.targets.wheel]
+packages = ['src/elsevier_research_mcp_utm']
+
+[tool.pytest.ini_options]
+testpaths = ['tests']
+
+[tool.ruff]
+line-length = 110
+src = ['src', 'tests']
+
+[tool.ruff.lint]
+select = ['E', 'F', 'W', 'I']
+
+[tool.ruff.format]
+quote-style = 'single'

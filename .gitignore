@@ -1,0 +1,27 @@
+# secrets
+.env
+.env.*
+!.env.example
+
+# fetched content (never commit, Elsevier terms)
+papers/
+downloads/
+cache/
+*.sqlite
+*.pdf
+
+# python
+__pycache__/
+*.py[cod]
+.venv/
+build/
+dist/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+
+# os / editors
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

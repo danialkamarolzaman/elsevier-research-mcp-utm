@@ -1,0 +1,35 @@
+{
+  "search-results": {
+    "opensearch:totalResults": "137",
+    "opensearch:startIndex": "0",
+    "opensearch:itemsPerPage": "2",
+    "entry": [
+      {
+        "dc:identifier": "SCOPUS_ID:11111111111",
+        "eid": "2-s2.0-11111111111",
+        "dc:title": "A made-up study of predictive maintenance for test fixtures",
+        "dc:creator": "Tester A.",
+        "prism:publicationName": "Journal of Example Engineering",
+        "prism:volume": "12",
+        "prism:issueIdentifier": "3",
+        "prism:pageRange": "100-110",
+        "prism:coverDate": "2024-05-01",
+        "prism:doi": "10.9999/example.2024.001",
+        "pii": "S0000000024000001",
+        "citedby-count": "42",
+        "openaccessFlag": false
+      },
+      {
+        "dc:identifier": "SCOPUS_ID:22222222222",
+        "eid": "2-s2.0-22222222222",
+        "dc:title": "Another invented paper on remaining useful life",
+        "dc:creator": "Sample B.",
+        "prism:publicationName": "Example Letters",
+        "prism:coverDate": "2022-01-15",
+        "prism:doi": "10.9999/example.2022.002",
+        "citedby-count": "7",
+        "openaccessFlag": true
+      }
+    ]
+  }
+}
