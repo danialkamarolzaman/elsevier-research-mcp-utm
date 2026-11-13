@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.5.0 (unreleased)
+
+- `research-draft` skill: drafts a document grounded only in retrieved papers. Last 5 years from
+  today, most-cited plus recent papers (two searches), two approval pauses, IEEE citations with
+  [FT]/[AB] evidence labels, gaps stated instead of filled, references exported.
+- `claim-verifier` agent: independent, read-only fact-check of every reference (DOI, title, author,
+  year, journal), citation, claim and number against the sources; never downloads anything new.
+  The skill reworks every blocking issue and re-verifies, at most 2 rounds, and reports what is left.
+- README: full and short research prompts for any MCP client, with the verify-and-rework step.
+
 ## 0.4.1 (unreleased)
 
 - Fix: API key not detected when the plugin runs from the Claude desktop app on macOS. The app does not

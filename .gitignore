@@ -6,6 +6,7 @@
 # fetched content (never commit, Elsevier terms)
 papers/
 downloads/
+drafts/
 cache/
 *.sqlite
 *.pdf
