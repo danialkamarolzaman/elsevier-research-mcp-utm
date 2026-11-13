@@ -1,3 +1,5 @@
+import os
+
 from . import __version__, client, config, limits
 from .sources import sciencedirect, scopus
 
@@ -19,8 +21,12 @@ def run(doi=None):
     report = {
         'version': __version__,
         'api_key_set': bool(config.api_key),
+        'api_key_source': config.source('ELSEVIER_API_KEY') if config.api_key else 'none',  # env, file, none
         'api_key_valid': None,
         'insttoken_set': bool(config.insttoken),
+        'insttoken_source': config.source('ELSEVIER_INSTTOKEN') if config.insttoken else 'none',
+        'config_file': config.config_file,
+        'config_file_found': os.path.isfile(config.config_file),
         'tier': 'none',
         'abstracts': None,
         'fulltext': None,
@@ -34,7 +40,10 @@ def run(doi=None):
         'advice': [],
     }
     if not config.api_key:
-        report['advice'].append('Set ELSEVIER_API_KEY (get one at https://dev.elsevier.com).')
+        report['advice'].append(
+            'No ELSEVIER_API_KEY found (get one at https://dev.elsevier.com). Put the line '
+            f'ELSEVIER_API_KEY=<your key> in {config.config_file} (works in every app, including the '
+            'Claude desktop app), or set it as an environment variable. Then restart the app.')
         return report
     # 1 key works?
     try:
@@ -81,9 +90,11 @@ def text(report):
     u = report['limits']
     lines = [
         f"elsevier-research-mcp-utm {report['version']}",
-        f"API key set      : {yes[report['api_key_set']]}",
+        f"API key set      : {yes[report['api_key_set']]} (from {report['api_key_source']})",
         f"API key valid    : {yes[report['api_key_valid']]}",
-        f"insttoken set    : {yes[report['insttoken_set']]}",
+        f"insttoken set    : {yes[report['insttoken_set']]} (from {report['insttoken_source']})",
+        f"config file      : {report['config_file']} "
+        f"({'found' if report['config_file_found'] else 'not found'})",
         f"access tier      : {report['tier']}",
         f"abstracts        : {yes[report['abstracts']]}",
         f"full text        : {yes[report['fulltext']]}" + (

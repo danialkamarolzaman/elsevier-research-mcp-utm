@@ -1,7 +1,7 @@
 {
   "name": "elsevier-research-mcp-utm",
-  "version": "0.4.0",
-  "description": "Search Scopus, get abstracts, open-access and ScienceDirect full text through the official Elsevier APIs, with institution download limits built in (UTM Library defaults: 5 articles and 100 MB per 15 min). Unofficial. Needs ELSEVIER_API_KEY and uv.",
+  "version": "0.4.1",
+  "description": "Search Scopus, get abstracts, open-access and ScienceDirect full text through the official Elsevier APIs, with institution download limits built in (UTM Library defaults: 5 articles and 100 MB per 15 min). Unofficial. Needs uv and an Elsevier API key (config file or ELSEVIER_API_KEY).",
   "author": {
     "name": "danialkamarolzaman",
     "url": "https://github.com/danialkamarolzaman"

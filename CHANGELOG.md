@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.4.1 (unreleased)
+
+- Fix: API key not detected when the plugin runs from the Claude desktop app on macOS. The app does not
+  pass the shell or launchd environment to plugin MCP servers, so `ELSEVIER_API_KEY` was never seen.
+  Settings are now also read from a user config file (`KEY=value` lines, comments and quotes allowed):
+  `$XDG_CONFIG_HOME` or `~/.config/elsevier-research-mcp-utm/.env` on macOS / Linux,
+  `%APPDATA%\elsevier-research-mcp-utm\.env` on Windows, or `ERM_CONFIG_FILE`. Real environment
+  variables still win.
+- `check_access` / `doctor` report where the key and insttoken came from (`env`, `file`, `none`) and the
+  config file path, never the values. Warns when the file is readable by other users (`chmod 600`).
+- README and `elsevier-setup` skill: config-file setup first.
+
 ## 0.4.0 (unreleased)
 
 - Claude Code plugin: `.claude-plugin/plugin.json` (MCP server `elsevier`, run with uvx) and

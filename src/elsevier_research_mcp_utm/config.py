@@ -1,10 +1,72 @@
 import os
+import re
+import stat
 
-problems = []  # bad env values found while loading
+problems = []  # bad settings found while loading (never contain secret values)
+sources = {}  # setting name -> 'env' or 'file', for doctor
 
 
-def _text(name, default=''):
-    return os.environ.get(name, default).strip()
+# ---------------- config file ----------------
+# some hosts (e.g. the Claude desktop app on macOS) do not pass the user's shell
+# environment to MCP servers, so settings can also live in a KEY=value file
+def config_file_path():
+    if os.environ.get('ERM_CONFIG_FILE'):
+        return os.environ['ERM_CONFIG_FILE']
+    if os.name == 'nt' and os.environ.get('APPDATA'):
+        return os.path.join(os.environ['APPDATA'], 'elsevier-research-mcp-utm', '.env')
+    base = os.environ.get('XDG_CONFIG_HOME') or os.path.join(os.path.expanduser('~'), '.config')
+    return os.path.join(base, 'elsevier-research-mcp-utm', '.env')
+
+
+def read_env_file(path):
+    values = {}
+    if not os.path.isfile(path):
+        return values
+    try:
+        with open(path, encoding='utf-8-sig') as f:
+            lines = f.read().splitlines()
+    except OSError as e:
+        problems.append(f'cannot read config file {path}: {e.strerror}')
+        return values
+    for n, line in enumerate(lines, 1):
+        line = line.strip()
+        if not line or line.startswith('#'):
+            continue
+        if line.startswith('export '):
+            line = line[len('export '):].strip()
+        if '=' not in line:
+            problems.append(f'config file line {n}: no "=", skipped')
+            continue
+        key, value = (part.strip() for part in line.split('=', 1))
+        if not re.fullmatch(r'[A-Za-z_][A-Za-z0-9_]*', key):
+            problems.append(f'config file line {n}: bad name, skipped')
+            continue
+        if len(value) >= 2 and value[0] == value[-1] and value[0] in '"\'':
+            value = value[1:-1]  # quoted, keep as is
+        else:
+            value = re.split(r'\s+#', value, 1)[0].strip()  # drop trailing comment
+        values[key] = value
+    if os.name != 'nt' and values:
+        mode = os.stat(path).st_mode
+        if mode & (stat.S_IRWXG | stat.S_IRWXO):
+            problems.append(f'config file is readable by other users, run: chmod 600 "{path}"')
+    return values
+
+
+config_file = config_file_path()
+file_values = read_env_file(config_file)
+
+
+# ---------------- readers: real env var wins, then config file, then default ----------------
+def _text(name, default='', keep_empty=False):
+    raw = os.environ.get(name)
+    if raw is not None and (raw.strip() or keep_empty):
+        sources[name] = 'env'
+        return raw.strip()
+    if name in file_values:
+        sources[name] = 'file'
+        return file_values[name].strip()
+    return default
 
 
 def _int(name, default, lowest=0):
@@ -20,6 +82,10 @@ def _int(name, default, lowest=0):
         problems.append(f'{name}={value} is below {lowest}, using {default}')
         return default
     return value
+
+
+def source(name):
+    return sources.get(name, 'none')
 
 
 def _default_cache_dir():
@@ -45,7 +111,7 @@ pdf_name = _text('ERM_PDF_NAME') or '{first_author} {year} - {title}'
 cache_days = _int('ERM_CACHE_DAYS', 30)  # search / abstract cache lifetime
 
 # ---------------- institution (UTM defaults) ----------------
-proxy_host = _text('ERM_PROXY_HOST', 'ezproxy.utm.my')  # empty = no proxy links
+proxy_host = _text('ERM_PROXY_HOST', 'ezproxy.utm.my', keep_empty=True)  # empty = no proxy links
 max_articles_per_window = _int('ERM_MAX_ARTICLES_PER_WINDOW', 5, 1)
 max_mb_per_window = _int('ERM_MAX_MB_PER_WINDOW', 100, 1)
 window_minutes = _int('ERM_WINDOW_MINUTES', 15, 1)

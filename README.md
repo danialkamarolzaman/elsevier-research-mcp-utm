@@ -8,7 +8,7 @@ A Claude Code plugin and MCP server for searching Scopus and fetching ScienceDir
 
 ## Install in Claude Code
 
-Needs [uv](https://docs.astral.sh/uv/) and an Elsevier API key in `ELSEVIER_API_KEY` (see [Setup](#setup)).
+Needs [uv](https://docs.astral.sh/uv/) and an Elsevier API key saved in the config file or as `ELSEVIER_API_KEY` (see [Setup](#setup)).
 
 ```
 /plugin marketplace add danialkamarolzaman/elsevier-research-mcp-utm
@@ -66,10 +66,31 @@ The tool is **headless only through the API**. It never scrapes ScienceDirect or
 
 ## Setup
 
-1. Get an API key at <https://dev.elsevier.com> and set it as an environment variable:
+1. Get an API key at <https://dev.elsevier.com> and save it in the **config file** (works in every app, including the Claude desktop app, which does not pass your shell environment to plugins):
+
+   | OS | Config file |
+   |---|---|
+   | macOS / Linux | `~/.config/elsevier-research-mcp-utm/.env` (or `$XDG_CONFIG_HOME/elsevier-research-mcp-utm/.env`) |
+   | Windows | `%APPDATA%\elsevier-research-mcp-utm\.env` |
+
+   ```
+   ELSEVIER_API_KEY=your-key-here
+   ```
+
+   macOS / Linux, in a terminal:
+
+   ```
+   mkdir -p ~/.config/elsevier-research-mcp-utm
+   printf 'ELSEVIER_API_KEY=%s\n' 'your-key-here' > ~/.config/elsevier-research-mcp-utm/.env
+   chmod 600 ~/.config/elsevier-research-mcp-utm/.env
+   ```
+
+   The file takes any setting from [`.env.example`](.env.example), one `KEY=value` per line; `#` comments and quotes are fine. **Environment variables win over the file**, so the old method still works where the host passes your environment through (Claude Code in a terminal):
    - Windows (PowerShell): `[Environment]::SetEnvironmentVariable('ELSEVIER_API_KEY', '<key>', 'User')`
-   - macOS / Linux: add `export ELSEVIER_API_KEY=<key>` to your shell profile
-2. Optional: ask your library for an Elsevier **insttoken** and set `ELSEVIER_INSTTOKEN`. UTM: libsupport@utm.my.
+   - macOS / Linux: `export ELSEVIER_API_KEY=<key>` in your shell profile
+
+   `doctor` / `check_access` show where the key was found (`env`, `file` or `none`), never the key itself. Restart the app after changing the file. Set `ERM_CONFIG_FILE` to use a different path.
+2. Optional: ask your library for an Elsevier **insttoken** and add `ELSEVIER_INSTTOKEN=...` to the same file. UTM: libsupport@utm.my.
 3. Install [uv](https://docs.astral.sh/uv/), then check your setup:
 
    ```
