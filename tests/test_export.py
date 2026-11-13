@@ -17,8 +17,8 @@ s2 = re.compile(r'https://api\.semanticscholar\.org/.*')
 def paper(**kw):
     p = models.empty_paper()
     p.update({'doi': '10.1/x', 'title': 'Graph methods for maintenance',
-              'authors': ['Liqiao Xia', 'Jo Bloggs'], 'first_author': 'Liqiao Xia', 'year': 2022, 'journal': 'R&D Journal', 'volume': '9',
-              'issue': '2', 'pages': '10-20'})
+              'authors': ['Liqiao Xia', 'Jo Bloggs'], 'first_author': 'Liqiao Xia', 'year': 2022,
+              'journal': 'R&D Journal', 'volume': '9', 'issue': '2', 'pages': '10-20'})
     p.update(kw)
     return p
 
