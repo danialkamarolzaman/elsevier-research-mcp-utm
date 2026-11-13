@@ -44,7 +44,7 @@ def read_env_file(path):
         if len(value) >= 2 and value[0] == value[-1] and value[0] in '"\'':
             value = value[1:-1]  # quoted, keep as is
         else:
-            value = re.split(r'\s+#', value, 1)[0].strip()  # drop trailing comment
+            value = re.split(r'\s+#', value, maxsplit=1)[0].strip()  # drop trailing comment
         values[key] = value
     if os.name != 'nt' and values:
         mode = os.stat(path).st_mode
