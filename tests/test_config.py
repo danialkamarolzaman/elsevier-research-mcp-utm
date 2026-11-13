@@ -89,7 +89,8 @@ def test_malformed_lines_skipped_without_leaking(cfg_file):
     cfg_file.write_text('just some text secretvalue\n1BAD=x\nELSEVIER_API_KEY=good\n', encoding='utf-8')
     c = importlib.reload(config)
     assert c.api_key == 'good'
-    assert len(c.problems) == 2
+    line_problems = [p for p in c.problems if 'line' in p]  # linux also warns about chmod here
+    assert len(line_problems) == 2
     assert not any('secretvalue' in p for p in c.problems)
 
 
