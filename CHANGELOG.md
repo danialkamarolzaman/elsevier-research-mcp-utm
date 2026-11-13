@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.3.0 (unreleased)
+
+- `get_fulltext` tool: ScienceDirect plain text after an entitlement check, paged from cache.
+- `download_pdf` tool: open-access copy first (not counted), else Elsevier PDF if entitled.
+  Streams to a `.part` file, refuses or stops when the MB budget would be exceeded, rejects non-PDF
+  responses, logs partial transfers. Never downloads the same DOI twice; same-name papers kept apart.
+- `download_batch` tool: up to 5 DOIs, sequential, stops at the first limit refusal.
+- PDF naming from `ERM_PDF_NAME`, safe for Windows.
+- CI: actions/checkout@v5 and astral-sh/setup-uv@v7 (Node 24).
+
 ## 0.2.0 (unreleased)
 
 - `get_abstract` tool: Elsevier abstract when entitled, then OpenAlex, then Semantic Scholar, with notes

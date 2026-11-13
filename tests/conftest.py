@@ -3,7 +3,7 @@ import os
 
 import pytest
 
-from elsevier_research_mcp_utm import client, config
+from elsevier_research_mcp_utm import client, config, limits
 from elsevier_research_mcp_utm.sources import scopus, semanticscholar
 
 fixtures_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'fixtures')
@@ -26,12 +26,15 @@ def clean_config(tmp_path, monkeypatch):
     monkeypatch.setattr(config, 'window_minutes', 15)
     monkeypatch.setattr(config, 'max_articles_per_day', 20)
     monkeypatch.setattr(config, 'min_delay_seconds', 10)
+    monkeypatch.setattr(config, 'download_dir', str(tmp_path / 'papers'))
+    monkeypatch.setattr(config, 'pdf_name', '{first_author} {year} - {title}')
     monkeypatch.setattr(config, 'semantic_scholar_key', '')
     monkeypatch.setattr(config, 'openalex_mailto', '')
     monkeypatch.setattr(client.time, 'sleep', lambda s: None)
     monkeypatch.setattr(scopus, 'abstracts_blocked_until', 0.0)
     monkeypatch.setattr(semanticscholar, 'last_call', 0.0)
     monkeypatch.setattr(semanticscholar.time, 'sleep', lambda s: None)
+    monkeypatch.setattr(limits.time, 'sleep', lambda s: None)
     client.last_rate.clear()
     yield
     client.last_rate.clear()

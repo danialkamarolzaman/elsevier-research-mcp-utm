@@ -1,20 +1,8 @@
 from . import __version__, client, config, limits
-from .sources import scopus
+from .sources import sciencedirect, scopus
 
 # ---------------- setup check ----------------
 test_query = 'SRCTITLE("Reliability Engineering and System Safety") AND TITLE(maintenance)'
-
-
-def _entitlement(doi=None, pii=None):
-    ident = f'pii/{pii}' if pii else f'doi/{doi}'
-    try:
-        data = client.get_json(f'{config.base_url}/content/article/entitlement/{ident}')
-        ent = data.get('entitlement-response', {}).get('document-entitlement', {})
-        return bool(ent.get('entitled')), None
-    except client.ApiError as e:
-        if e.status in (401, 403):
-            return False, str(e)
-        raise
 
 
 def _abstract_allowed(scopus_id):
@@ -70,7 +58,7 @@ def run(doi=None):
     target_pii = None if doi else sample.get('pii')
     if target_doi or target_pii:
         report['checked_paper'] = target_doi or target_pii
-        report['fulltext'], note = _entitlement(target_doi, target_pii)
+        report['fulltext'], note = sciencedirect.entitled(target_doi, target_pii)
         if note:
             report['notes'].append(f'full-text check: {note}')
         if report['fulltext']:

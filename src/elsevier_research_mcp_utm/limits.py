@@ -55,8 +55,9 @@ def check(now=None):
     return True, 'ok', now
 
 
-def wait_for_gap(now=None, sleep=time.sleep):
+def wait_for_gap(now=None, sleep=None):
     # keep min_delay_seconds between two fetches, one at a time
+    sleep = sleep or time.sleep
     now = now or time.time()
     last = usage(now)['last_fetch_ts']
     if last is None:

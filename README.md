@@ -4,7 +4,7 @@ An MCP server (and, from v1.0, a Claude Code plugin) for searching Scopus and fe
 
 > **Unofficial.** Not affiliated with or endorsed by Elsevier or Universiti Teknologi Malaysia. Content you fetch is governed by Elsevier's terms and your institution's licence: do not share or redistribute it.
 
-**Status: 0.2 (early).** Full text, PDFs and export arrive in 0.3–0.4.
+**Status: 0.3 (early).** Reference export, skills and the Claude Code plugin arrive in 0.4–1.0.
 
 ## Tools
 
@@ -14,6 +14,11 @@ An MCP server (and, from v1.0, a Claude Code plugin) for searching Scopus and fe
 | `search_scopus` | Scopus advanced search, sorted by citations, date or relevance | no |
 | `get_abstract` | abstract + metadata for a DOI: Elsevier (if entitled) → OpenAlex → Semantic Scholar | no |
 | `find_open_access` | free legal copy (PDF link, licence, version) via OpenAlex | no |
+| `get_fulltext` | ScienceDirect full text as plain text, paged; re-reading is free from cache | **yes** |
+| `download_pdf` | one PDF: open-access copy first (not counted), else Elsevier if entitled | **yes** (Elsevier only) |
+| `download_batch` | up to 5 PDFs one after another; stops at the first limit refusal | **yes** (Elsevier only) |
+
+Before any counted fetch the tool checks entitlement (free). With no access nothing is downloaded and nothing is counted. PDFs are named `{first_author} {year} - {title}.pdf` (`ERM_PDF_NAME`), saved in `ERM_DOWNLOAD_DIR`, and never downloaded twice; two different papers with the same name are both kept (the second gets its DOI appended).
 
 **About abstracts off-campus:** Elsevier withholds its own abstracts from OpenAlex and Semantic Scholar. Off-campus without an insttoken, most Elsevier papers therefore come back with full metadata but no abstract; the result says so and gives an EZproxy link. Open-access and most non-Elsevier papers do get abstracts.
 

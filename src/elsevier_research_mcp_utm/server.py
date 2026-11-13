@@ -2,7 +2,7 @@ from typing import Literal
 
 from mcp.server.mcpserver import MCPServer
 
-from . import __version__, abstracts, client, doctor
+from . import __version__, abstracts, client, doctor, fetch
 from .sources import scopus
 
 mcp = MCPServer(
@@ -69,5 +69,47 @@ def get_abstract(doi: str) -> dict:
 def find_open_access(doi: str) -> dict:
     try:
         return abstracts.find_open_access(doi)
+    except (client.ApiError, ValueError) as e:
+        return _error(e)
+
+
+limit_note = ('COUNTS toward institution download limits (UTM default: 5 articles and 100 MB per 15 min, '
+              '20 per day, 10 s apart). When refused, the result gives the reason and next_allowed time: '
+              'tell the user and wait, never retry in a loop.')
+
+
+@mcp.tool(description=(
+    'Get the full text of a ScienceDirect article as plain text, by DOI or PII. Needs institutional access '
+    '(campus network or insttoken); access is checked first and nothing is fetched without it. '
+    'Long texts are paged: read more with start=end of the previous call (re-reading is free, from cache). '
+    + limit_note))
+def get_fulltext(
+    doi: str | None = None, pii: str | None = None, start: int = 0, max_chars: int = 40000,
+) -> dict:
+    try:
+        return fetch.get_fulltext(doi, pii, start, max_chars)
+    except (client.ApiError, ValueError) as e:
+        return _error(e)
+
+
+@mcp.tool(description=(
+    'Download one paper as a PDF into the download folder (ERM_DOWNLOAD_DIR), named '
+    '"{first_author} {year} - {title}.pdf" unless filename is given. With prefer_open_access (default) a '
+    'free legal copy is tried first and does not count toward limits; otherwise the Elsevier PDF is fetched '
+    'if entitled. Existing files are not downloaded again. ' + limit_note))
+def download_pdf(doi: str, filename: str | None = None, prefer_open_access: bool = True) -> dict:
+    try:
+        return fetch.download_pdf(doi, filename, prefer_open_access)
+    except (client.ApiError, ValueError) as e:
+        return _error(e)
+
+
+@mcp.tool(description=(
+    'Download up to 5 papers as PDFs, one after another, then stop. Stops early at the first limit refusal '
+    'and lists DOIs not attempted; never continues in the background. Use for small batches after '
+    'checking find_open_access. ' + limit_note))
+def download_batch(dois: list[str], prefer_open_access: bool = True) -> dict:
+    try:
+        return fetch.download_batch(dois, prefer_open_access)
     except (client.ApiError, ValueError) as e:
         return _error(e)

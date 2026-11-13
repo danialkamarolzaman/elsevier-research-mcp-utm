@@ -1,4 +1,5 @@
 import logging
+import os
 import time
 from urllib.parse import urlparse
 
@@ -99,6 +100,60 @@ def get(url, params=None, accept='application/json'):
 
 def get_json(url, params=None):
     return get(url, params).json()
+
+
+# ---------------- streamed downloads ----------------
+class TooLarge(Exception):
+    pass
+
+
+def stream_to_file(url, path, max_bytes, accept='application/pdf', elsevier=True):
+    # streams into path.part, renames when complete. returns bytes received.
+    # raises TooLarge (before or during download) or ApiError; partial files are removed.
+    # every return / raise carries .received so the caller can log what was transferred
+    if elsevier and not config.api_key:
+        raise ApiError(0, 'NO_KEY', 'ELSEVIER_API_KEY is not set')
+    hdrs = headers(accept) if elsevier else {'User-Agent': user_agent, 'Accept': accept}
+    part = path + '.part'
+    received = 0
+    try:
+        with httpx.stream('GET', url, headers=hdrs, timeout=config.timeout, follow_redirects=True) as resp:
+            if elsevier:
+                _read_rate(resp)
+            if resp.status_code >= 400:
+                resp.read()
+                code, text = _service_error(resp) if elsevier else ('HTTP', resp.text[:150])
+                raise ApiError(resp.status_code, code, _explain(resp.status_code, code, text))
+            size = resp.headers.get('Content-Length')
+            left = f'{max_bytes / 1e6:.1f} MB'
+            if size and size.isdigit() and int(size) > max_bytes:
+                err = TooLarge(f'file is {int(size) / 1e6:.1f} MB, only {left} left in window')
+                err.received = 0
+                raise err
+            first = b''
+            with open(part, 'wb') as f:
+                for chunk in resp.iter_bytes():
+                    if len(first) < 5:
+                        first += chunk[:5]
+                    received += len(chunk)
+                    if received > max_bytes:
+                        err = TooLarge(f'stopped at {received / 1e6:.1f} MB, over the {left} left')
+                        err.received = received
+                        raise err
+                    f.write(chunk)
+            if accept == 'application/pdf' and not first.startswith(b'%PDF'):
+                err = ApiError(resp.status_code, 'NOT_PDF', 'server did not return a PDF (login page?)')
+                err.received = received
+                raise err
+        os.replace(part, path)
+        return received
+    except httpx.HTTPError as e:
+        err = ApiError(0, 'NETWORK', f'network error: {e}')
+        err.received = received
+        raise err
+    finally:
+        if os.path.exists(part):
+            os.remove(part)
 
 
 # ---------------- free sources (openalex, semantic scholar) ----------------
