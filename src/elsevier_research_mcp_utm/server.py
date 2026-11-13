@@ -2,7 +2,7 @@ from typing import Literal
 
 from mcp.server.mcpserver import MCPServer
 
-from . import __version__, client, doctor
+from . import __version__, abstracts, client, doctor
 from .sources import scopus
 
 mcp = MCPServer(
@@ -46,4 +46,28 @@ def search_scopus(
     try:
         return scopus.search(query, year_from, year_to, sort, count, start)
     except client.ApiError as e:
+        return _error(e)
+
+
+@mcp.tool(description=(
+    'Get the abstract and full metadata for one DOI. Tries Elsevier (only when entitled: campus network '
+    'or insttoken), then OpenAlex, then Semantic Scholar; abstract_source says which one answered. '
+    'Elsevier withholds its own abstracts from the free sources, so off-campus many Elsevier papers come '
+    'back without an abstract: the notes explain why and proxy_url opens the paper via EZproxy. '
+    'Does not count toward download limits.'))
+def get_abstract(doi: str) -> dict:
+    try:
+        return abstracts.get_abstract(doi)
+    except (client.ApiError, ValueError) as e:
+        return _error(e)
+
+
+@mcp.tool(description=(
+    'Find a free, legal open-access copy of a paper by DOI (via OpenAlex): open-access status, PDF link, '
+    'landing page, licence and version (published or accepted manuscript). Use this before institutional '
+    'access. Does not count toward download limits.'))
+def find_open_access(doi: str) -> dict:
+    try:
+        return abstracts.find_open_access(doi)
+    except (client.ApiError, ValueError) as e:
         return _error(e)

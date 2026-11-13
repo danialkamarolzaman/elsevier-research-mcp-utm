@@ -1,5 +1,6 @@
 import logging
 import time
+from urllib.parse import urlparse
 
 import httpx
 
@@ -19,7 +20,7 @@ class ApiError(Exception):
 
 def redact(text):
     text = str(text)
-    for secret in (config.api_key, config.insttoken):
+    for secret in (config.api_key, config.insttoken, config.semantic_scholar_key):
         if secret:
             text = text.replace(secret, '***')
     return text
@@ -63,25 +64,33 @@ def _explain(status, code, text):
     return f'HTTP {status}: ' + text
 
 
-def get(url, params=None, accept='application/json'):
-    if not config.api_key:
-        raise ApiError(0, 'NO_KEY', 'ELSEVIER_API_KEY is not set')
+def _send(url, params, hdrs, elsevier):
+    # one request with retry on throttle / server errors
     resp = None
     for attempt in range(config.retries):
         try:
-            resp = httpx.get(url, params=params, headers=headers(accept), timeout=config.timeout)
+            resp = httpx.get(url, params=params, headers=hdrs, timeout=config.timeout, follow_redirects=True)
         except httpx.HTTPError as e:
             if attempt == config.retries - 1:
                 raise ApiError(0, 'NETWORK', f'network error: {e}')
             time.sleep(2 ** attempt)
             continue
-        _read_rate(resp)
-        quota_gone = last_rate.get('X-RateLimit-Remaining') == '0'
+        if elsevier:
+            _read_rate(resp)
+        quota_gone = elsevier and last_rate.get('X-RateLimit-Remaining') == '0'
         retry = resp.status_code >= 500 or (resp.status_code == 429 and not quota_gone)
         if retry and attempt < config.retries - 1:
             time.sleep(2 ** attempt)
             continue
         break
+    return resp
+
+
+# ---------------- elsevier ----------------
+def get(url, params=None, accept='application/json'):
+    if not config.api_key:
+        raise ApiError(0, 'NO_KEY', 'ELSEVIER_API_KEY is not set')
+    resp = _send(url, params, headers(accept), elsevier=True)
     if resp.status_code >= 400:
         code, text = _service_error(resp)
         raise ApiError(resp.status_code, code, _explain(resp.status_code, code, text))
@@ -90,3 +99,16 @@ def get(url, params=None, accept='application/json'):
 
 def get_json(url, params=None):
     return get(url, params).json()
+
+
+# ---------------- free sources (openalex, semantic scholar) ----------------
+def get_public_json(url, params=None, extra_headers=None):
+    # returns None on 404
+    hdrs = {'User-Agent': user_agent, 'Accept': 'application/json', **(extra_headers or {})}
+    resp = _send(url, params, hdrs, elsevier=False)
+    if resp.status_code == 404:
+        return None
+    if resp.status_code >= 400:
+        host = urlparse(url).netloc
+        raise ApiError(resp.status_code, 'HTTP', f'{host} HTTP {resp.status_code}: {resp.text[:150]}')
+    return resp.json()

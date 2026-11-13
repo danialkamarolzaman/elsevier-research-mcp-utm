@@ -4,7 +4,18 @@ An MCP server (and, from v1.0, a Claude Code plugin) for searching Scopus and fe
 
 > **Unofficial.** Not affiliated with or endorsed by Elsevier or Universiti Teknologi Malaysia. Content you fetch is governed by Elsevier's terms and your institution's licence: do not share or redistribute it.
 
-**Status: 0.1 (early).** Available now: `check_access`, `search_scopus`, `doctor`. Abstracts, full text, PDFs and export arrive in 0.2–0.4.
+**Status: 0.2 (early).** Full text, PDFs and export arrive in 0.3–0.4.
+
+## Tools
+
+| Tool | What it does | Counts toward limits |
+|---|---|---|
+| `check_access` | key valid?, access tier, Elsevier quota, limit usage | no |
+| `search_scopus` | Scopus advanced search, sorted by citations, date or relevance | no |
+| `get_abstract` | abstract + metadata for a DOI: Elsevier (if entitled) → OpenAlex → Semantic Scholar | no |
+| `find_open_access` | free legal copy (PDF link, licence, version) via OpenAlex | no |
+
+**About abstracts off-campus:** Elsevier withholds its own abstracts from OpenAlex and Semantic Scholar. Off-campus without an insttoken, most Elsevier papers therefore come back with full metadata but no abstract; the result says so and gives an EZproxy link. Open-access and most non-Elsevier papers do get abstracts.
 
 ## Why the limits matter
 
@@ -31,7 +42,7 @@ Users at other institutions should set these to match their own library's rules.
 | Tier | What you get | How |
 |---|---|---|
 | metadata | titles, authors, DOI, PII, citations | any network, API key only |
-| abstracts | + Elsevier abstracts | subscribed network or insttoken |
+| abstracts | + Elsevier abstracts (others come from free sources at every tier) | subscribed network or insttoken |
 | fulltext | + ScienceDirect full text | subscribed network (campus Wi-Fi) or insttoken |
 
 The tool is **headless only through the API**. It never scrapes ScienceDirect or logs in to EZproxy. Each paper includes a `proxy_url` (EZproxy link) that you can open yourself in a browser.

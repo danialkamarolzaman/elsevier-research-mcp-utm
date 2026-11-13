@@ -33,6 +33,7 @@ def _default_cache_dir():
 api_key = _text('ELSEVIER_API_KEY')  # required, from dev.elsevier.com
 insttoken = _text('ELSEVIER_INSTTOKEN')  # optional, from your library
 openalex_mailto = _text('OPENALEX_MAILTO')  # optional, OpenAlex polite pool
+semantic_scholar_key = _text('SEMANTIC_SCHOLAR_API_KEY')  # optional, higher S2 rate limit
 base_url = 'https://api.elsevier.com'
 timeout = 30  # seconds per request
 retries = 3  # on 429 throttle / 5xx

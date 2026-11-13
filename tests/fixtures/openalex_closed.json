@@ -1,0 +1,13 @@
+{
+  "id": "https://openalex.org/W0000000002",
+  "doi": "https://doi.org/10.9999/closed.2022.020",
+  "title": "An invented subscription paper",
+  "publication_year": 2022,
+  "authorships": [{"author": {"display_name": "Closed Author"}}],
+  "primary_location": {"source": {"display_name": "Subscription Example Journal"}},
+  "biblio": {"volume": "50", "issue": null, "first_page": "109068", "last_page": null},
+  "cited_by_count": 168,
+  "open_access": {"is_oa": false, "oa_status": "closed", "oa_url": null},
+  "best_oa_location": null,
+  "abstract_inverted_index": null
+}

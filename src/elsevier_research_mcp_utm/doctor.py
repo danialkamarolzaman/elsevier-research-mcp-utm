@@ -82,7 +82,9 @@ def run(doi=None):
             'Elsevier insttoken (set ELSEVIER_INSTTOKEN). UTM: libsupport@utm.my. '
             'A split-tunnel VPN may not help.')
     if not report['abstracts']:
-        report['advice'].append('Abstracts will come from OpenAlex instead (free, no key).')
+        report['advice'].append(
+            'Abstracts fall back to OpenAlex and Semantic Scholar: good for open-access and most '
+            'non-Elsevier papers, but Elsevier abstracts need campus Wi-Fi or an insttoken.')
     return report
 
 
