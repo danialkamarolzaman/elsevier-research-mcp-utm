@@ -1,6 +1,6 @@
 [project]
 name = 'elsevier-research-mcp-utm'
-version = '0.2.0'
+version = '0.3.0'
 description = 'Unofficial MCP server and Claude Code plugin for the Elsevier Scopus and ScienceDirect APIs, with UTM Library download limits built in.'
 readme = 'README.md'
 license = 'MIT'
