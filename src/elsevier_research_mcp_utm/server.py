@@ -2,7 +2,7 @@ from typing import Literal
 
 from mcp.server.mcpserver import MCPServer
 
-from . import __version__, abstracts, client, doctor, fetch
+from . import __version__, abstracts, client, doctor, export, fetch
 from .sources import scopus
 
 mcp = MCPServer(
@@ -112,4 +112,18 @@ def download_batch(dois: list[str], prefer_open_access: bool = True) -> dict:
     try:
         return fetch.download_batch(dois, prefer_open_access)
     except (client.ApiError, ValueError) as e:
+        return _error(e)
+
+
+@mcp.tool(description=(
+    'Write a reference file for a list of DOIs (up to 100): bibtex (.bib), ris (.ris, for EndNote, Zotero, '
+    'Mendeley) or csv (.csv, opens in Excel, includes abstracts where known). Metadata comes from the same '
+    'cached lookup as get_abstract. Default path: the download folder, timestamped. '
+    'Does not count toward download limits.'))
+def export_references(
+    dois: list[str], format: Literal['bibtex', 'ris', 'csv'] = 'bibtex', path: str | None = None,
+) -> dict:
+    try:
+        return export.export_references(dois, format, path)
+    except (client.ApiError, ValueError, OSError) as e:
         return _error(e)

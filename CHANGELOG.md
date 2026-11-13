@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.4.0 (unreleased)
+
+- Claude Code plugin: `.claude-plugin/plugin.json` (MCP server `elsevier`, run with uvx) and
+  `.claude-plugin/marketplace.json`, so the repo installs with `/plugin marketplace add`.
+- Skills: `elsevier-setup` (first-run check, never asks for keys in chat) and `literature-review`
+  (query → screen → verify → fetch within limits → export), with a Scopus query syntax sheet.
+- `export_references` tool: BibTeX, RIS and CSV for up to 100 DOIs.
+
 ## 0.3.0 (unreleased)
 
 - `get_fulltext` tool: ScienceDirect plain text after an entitlement check, paged from cache.

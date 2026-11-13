@@ -1,10 +1,21 @@
 # elsevier-research-mcp-utm
 
-An MCP server (and, from v1.0, a Claude Code plugin) for searching Scopus and fetching ScienceDirect papers through the official Elsevier APIs, with **institution download limits built in**. The defaults follow the UTM Library e-resource rules.
+A Claude Code plugin and MCP server for searching Scopus and fetching ScienceDirect papers through the official Elsevier APIs, with **institution download limits built in**. The defaults follow the UTM Library e-resource rules.
 
 > **Unofficial.** Not affiliated with or endorsed by Elsevier or Universiti Teknologi Malaysia. Content you fetch is governed by Elsevier's terms and your institution's licence: do not share or redistribute it.
 
-**Status: 0.3 (early).** Reference export, skills and the Claude Code plugin arrive in 0.4–1.0.
+**Status: 0.4 (early).**
+
+## Install in Claude Code
+
+Needs [uv](https://docs.astral.sh/uv/) and an Elsevier API key in `ELSEVIER_API_KEY` (see [Setup](#setup)).
+
+```
+/plugin marketplace add danialkamarolzaman/elsevier-research-mcp-utm
+/plugin install elsevier-research-mcp-utm@elsevier-research-mcp-utm
+```
+
+Restart Claude Code, then ask: *"check my Elsevier access"*. The plugin adds the MCP server (`elsevier`) and two skills: `elsevier-setup` (first-run check) and `literature-review` (search → screen → fetch → export, within the limits).
 
 ## Tools
 
@@ -17,6 +28,7 @@ An MCP server (and, from v1.0, a Claude Code plugin) for searching Scopus and fe
 | `get_fulltext` | ScienceDirect full text as plain text, paged; re-reading is free from cache | **yes** |
 | `download_pdf` | one PDF: open-access copy first (not counted), else Elsevier if entitled | **yes** (Elsevier only) |
 | `download_batch` | up to 5 PDFs one after another; stops at the first limit refusal | **yes** (Elsevier only) |
+| `export_references` | BibTeX, RIS (EndNote / Zotero / Mendeley) or CSV for up to 100 DOIs | no |
 
 Before any counted fetch the tool checks entitlement (free). With no access nothing is downloaded and nothing is counted. PDFs are named `{first_author} {year} - {title}.pdf` (`ERM_PDF_NAME`), saved in `ERM_DOWNLOAD_DIR`, and never downloaded twice; two different papers with the same name are both kept (the second gets its DOI appended).
 
@@ -64,11 +76,13 @@ The tool is **headless only through the API**. It never scrapes ScienceDirect or
    uvx --from git+https://github.com/danialkamarolzaman/elsevier-research-mcp-utm elsevier-research-mcp-utm doctor
    ```
 
-4. Add it to Claude Code:
+4. Add it to Claude Code as a plugin (above), or as a plain MCP server for any MCP client:
 
    ```
    claude mcp add elsevier -- uvx --from git+https://github.com/danialkamarolzaman/elsevier-research-mcp-utm elsevier-research-mcp-utm
    ```
+
+   Other clients (Claude Desktop, Cursor, VS Code) use the same command: `uvx` with args `--from`, `git+https://github.com/danialkamarolzaman/elsevier-research-mcp-utm`, `elsevier-research-mcp-utm`.
 
 All settings are listed in [`.env.example`](.env.example).
 
