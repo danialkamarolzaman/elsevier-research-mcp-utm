@@ -8,6 +8,7 @@ modes:
   serve     run the MCP server on stdio (default)
   setup     first-time setup: save your API key (hidden input, checked first)
   doctor    check API key, access tier, quota and download limits
+  worker    fetch the queued papers in the background, one at a time, within the limits
   version   print the version
 '''
 
@@ -20,6 +21,9 @@ def main():
     elif mode == 'setup':
         from . import keysetup
         sys.exit(keysetup.run())
+    elif mode == 'worker':
+        from . import worker
+        sys.exit(worker.run())
     elif mode == 'doctor':
         from . import doctor
         report = doctor.run()

@@ -4,7 +4,8 @@ from . import abstracts, cache, client, config, limits, models, naming
 from .sources import openalex, sciencedirect
 
 # full text and PDFs. every institutional fetch goes through limits:
-# entitlement check (free) -> limits.check -> wait for gap -> fetch -> log bytes
+# entitlement check (free) -> one-at-a-time slot -> limits.check -> wait for gap -> fetch -> log bytes
+busy = 'another full-text fetch (e.g. the background worker) is still running; try again in a few minutes'
 
 
 def _refused(reason, doi=None, pii=None, **extra):
@@ -31,15 +32,18 @@ def get_fulltext(doi=None, pii=None, start=0, max_chars=40000):
         if not ok:
             reason = f'no full-text access: {note}. Try find_open_access, or open proxy_url.'
             return _refused(reason, doi, pii)
-        refusal = _limit_refusal(doi, pii)
-        if refusal:
-            return refusal
-        limits.wait_for_gap()
-        try:
-            text, nbytes = sciencedirect.fulltext(doi, pii)
-        except client.ApiError as e:
-            return _refused(str(e), doi, pii)
-        cache.log_fetch(pii or doi, 'text', nbytes)
+        with limits.fetch_slot() as got:
+            if not got:
+                return _refused(busy, doi, pii)
+            refusal = _limit_refusal(doi, pii)
+            if refusal:
+                return refusal
+            limits.wait_for_gap()
+            try:
+                text, nbytes = sciencedirect.fulltext(doi, pii)
+            except client.ApiError as e:
+                return _refused(str(e), doi, pii)
+            cache.log_fetch(pii or doi, 'text', nbytes)
         hit = {'text': text}
         cache.put(key, hit)
         cached = False
@@ -114,19 +118,22 @@ def download_pdf(doi, filename=None, prefer_open_access=True):
     ok, note = sciencedirect.entitled(doi, pii)
     if not ok:
         return _refused(f'no institutional access: {note}', doi, pii, notes=notes)
-    refusal = _limit_refusal(doi, pii)
-    if refusal:
-        return {**refusal, 'notes': notes}
-    limits.wait_for_gap()
-    budget = int(limits.remaining_mb() * 1e6)
-    try:
-        nbytes = sciencedirect.pdf_to_file(path, budget, doi, pii)
-    except (client.ApiError, client.TooLarge) as e:
-        got = getattr(e, 'received', 0)
-        if got:
-            cache.log_fetch(doi, 'aborted', got)  # bytes did cross the institution link
-        return _refused(str(e), doi, pii, notes=notes)
-    cache.log_fetch(doi, 'pdf', nbytes)
+    with limits.fetch_slot() as free:
+        if not free:
+            return _refused(busy, doi, pii, notes=notes)
+        refusal = _limit_refusal(doi, pii)
+        if refusal:
+            return {**refusal, 'notes': notes}
+        limits.wait_for_gap()
+        budget = int(limits.remaining_mb() * 1e6)
+        try:
+            nbytes = sciencedirect.pdf_to_file(path, budget, doi, pii)
+        except (client.ApiError, client.TooLarge) as e:
+            got = getattr(e, 'received', 0)
+            if got:
+                cache.log_fetch(doi, 'aborted', got)  # bytes did cross the institution link
+            return _refused(str(e), doi, pii, notes=notes)
+        cache.log_fetch(doi, 'pdf', nbytes)
     cache.put('pdf_path:' + doi, {'path': path})
     return {'ok': True, 'doi': doi, 'pii': pii, 'path': path, 'source': 'elsevier',
             'mb': round(nbytes / 1e6, 2), 'counted': True, 'notes': notes, 'limits': limits.usage()}

@@ -20,6 +20,9 @@ Start with `doctor` (terminal) or *"check my Elsevier access"* (Claude). It show
 | server fails to start after an update | stale uv cache | run the uvx command once with `--refresh` |
 | `setup needs a real terminal` | `setup` was run through an assistant or a pipe | open a terminal window and run it there |
 | `config file is readable by other users` | the file is not private (macOS / Linux) | `chmod 600 <file>` |
+| `Another worker is already running` | a worker is active (maybe in another terminal) | use that one; a crashed worker's claim expires after 2 minutes |
+| worker shows `blocked` papers | no Elsevier access on this network | it re-checks every 30 min; go on campus, add an insttoken, or open `_open_manually.md` |
+| "another full-text fetch ... is still running" | the worker holds the one-at-a-time slot | try again in a few minutes, or queue the paper instead |
 | `config file line N: ... skipped` | a line without `=` or with a bad name | fix that line; the message never shows the value |
 
 Still stuck? Open an issue with the `doctor` output. It never contains your key, but check before posting.

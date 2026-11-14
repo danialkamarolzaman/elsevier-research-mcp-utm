@@ -2,7 +2,7 @@ from typing import Literal
 
 from mcp.server.mcpserver import MCPServer
 
-from . import __version__, abstracts, client, doctor, export, fetch
+from . import __version__, abstracts, client, config, doctor, export, fetch, fetchqueue, worker
 from .sources import scopus
 
 mcp = MCPServer(
@@ -107,7 +107,7 @@ def download_pdf(doi: str, filename: str | None = None, prefer_open_access: bool
 @mcp.tool(description=(
     'Download up to 5 papers as PDFs, one after another, then stop. Stops early at the first limit refusal '
     'and lists DOIs not attempted; never continues in the background. Use for small batches after '
-    'checking find_open_access. ' + limit_note))
+    'checking find_open_access. For many papers use queue_papers instead. ' + limit_note))
 def download_batch(dois: list[str], prefer_open_access: bool = True) -> dict:
     try:
         return fetch.download_batch(dois, prefer_open_access)
@@ -128,3 +128,33 @@ def export_references(
         return export.export_references(dois, format, path)
     except (client.ApiError, ValueError, OSError) as e:
         return _error(e)
+
+
+@mcp.tool(description=(
+    'Queue papers (up to 200 DOIs) for the background worker, which fetches them headless one at a time '
+    'until all are done: open-access copies first (not counted), then Elsevier through the official API '
+    'when this network or an insttoken is entitled, always inside the institution limits (it sleeps until '
+    'the next allowed time, stops for the day at the daily cap, and starts again by itself when access '
+    'appears, e.g. on campus Wi-Fi). It never logs in to EZproxy: papers it cannot get go to a list the user '
+    'opens by hand. The worker is a separate program the USER starts in their own terminal; tell them the '
+    'command in "start_worker" if worker_running is false. Queueing itself fetches nothing.'))
+def queue_papers(dois: list[str]) -> dict:
+    try:
+        result = fetchqueue.add(dois)
+    except ValueError as e:
+        return _error(e)
+    running = fetchqueue.worker_active()
+    return {**result, 'worker_running': running, 'download_dir': config.download_dir,
+            'start_worker': None if running else worker.start_command}
+
+
+@mcp.tool(description=(
+    'Progress of the background fetch queue: counts (waiting, done, blocked = needs campus Wi-Fi or an '
+    'insttoken, manual = open it yourself, failed), each paper with its PDF path when done, whether the '
+    'worker is running, the next allowed institutional fetch, and the path of the list of papers to open by '
+    'hand. Free: fetches nothing.'))
+def queue_status() -> dict:
+    result = fetchqueue.status()
+    if not result['worker_running'] and result['counts']['waiting']:
+        result['start_worker'] = worker.start_command
+    return result

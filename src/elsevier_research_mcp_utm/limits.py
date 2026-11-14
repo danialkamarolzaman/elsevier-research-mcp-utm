@@ -1,6 +1,10 @@
+import contextlib
+import os
 import time
 
 from . import cache, config
+
+slot_stale_seconds = 900  # a lock older than this is left over from a crash
 
 # guards full-text / PDF fetches so an institution's e-resource rules are kept
 # (UTM Library: max 5 articles at once, max 100 MB in 15 min)
@@ -71,3 +75,36 @@ def wait_for_gap(now=None, sleep=None):
 
 def describe_time(ts):
     return time.strftime('%Y-%m-%d %H:%M', time.localtime(ts))
+
+
+# ---------------- one fetch at a time, across processes (MCP server + background worker) ----------------
+@contextlib.contextmanager
+def fetch_slot(timeout=600, sleep=None):
+    # yields True when this process may fetch, False if another fetch kept the slot past timeout
+    sleep = sleep or time.sleep
+    os.makedirs(config.cache_dir, exist_ok=True)
+    path = os.path.join(config.cache_dir, 'fetch.lock')
+    start = time.time()
+    got = False
+    while not got:
+        try:
+            os.close(os.open(path, os.O_CREAT | os.O_EXCL | os.O_WRONLY))
+            got = True
+        except FileExistsError:
+            try:
+                if time.time() - os.path.getmtime(path) > slot_stale_seconds:
+                    os.remove(path)
+                    continue
+            except OSError:
+                continue
+            if time.time() - start > timeout:
+                break
+            sleep(2)
+    try:
+        yield got
+    finally:
+        if got:
+            try:
+                os.remove(path)
+            except OSError:
+                pass

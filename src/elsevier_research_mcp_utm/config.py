@@ -128,3 +128,4 @@ max_mb_per_window = _int('ERM_MAX_MB_PER_WINDOW', 100, 1)
 window_minutes = _int('ERM_WINDOW_MINUTES', 15, 1)
 max_articles_per_day = _int('ERM_MAX_ARTICLES_PER_DAY', 20, 1)
 min_delay_seconds = _int('ERM_MIN_DELAY_SECONDS', 10, 0)
+recheck_minutes = _int('ERM_RECHECK_MINUTES', 30, 5)  # background worker: re-test access this often

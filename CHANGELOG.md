@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.7.0 (unreleased)
+
+- Background fetch queue: `queue_papers` (up to 200 DOIs) and `queue_status` tools, and an
+  `elsevier-research-mcp-utm worker` command the user runs in their own terminal. The worker fetches
+  one paper at a time, headless, until the queue is empty: open access first (not counted), then
+  Elsevier through the official API when entitled, inside the institution limits (sleeps until the
+  next allowed time, stops at the daily cap). Papers with no access wait as `blocked` and are fetched
+  automatically when access appears (free re-check every `ERM_RECHECK_MINUTES`, default 30); other
+  paywalled papers become `manual`. Both are listed in `_open_manually.md` with EZproxy links for the
+  user to open by hand; PDFs saved there are picked up. It never automates EZproxy or ScienceDirect
+  web pages. Only one worker at a time; network errors retried 3 times.
+- One-at-a-time lock across processes, so the worker and the MCP tools never fetch at the same time.
+- `research-draft` and `literature-review` skills queue the chosen papers and use the PDFs that arrive.
+
 ## 0.6.0 (unreleased)
 
 - Automated first-time key setup, two ways:

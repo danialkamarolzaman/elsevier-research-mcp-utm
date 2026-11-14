@@ -12,7 +12,7 @@ The `research-draft` skill (Claude Code plugin) writes a draft from real papers 
 
    You get one screening table: tag, year, first author, title, journal, citations, open access, relevant yes/no with a reason from the abstract.
 4. **Pause 2: the papers.** You confirm which ones to use.
-5. **Read.** Abstracts for all; full text where possible, open access first, then Elsevier within the download limits.
+5. **Read.** Abstracts for all. The chosen papers are queued for the background worker (start it in its own terminal), which fetches every PDF it legally can within the limits; the draft uses what has arrived, and [AB] citations can be upgraded to [FT] as more PDFs come in.
 6. **Draft** to `drafts/<topic>-draft-v1.md`: every factual sentence cited as `[n, FT]` (full text read) or `[n, AB]` (abstract only). It ends with References (IEEE, with DOI), a Sources table, a Verification table (claim, citation, quote or section) and Gaps.
 7. **Verify.** The `claim-verifier` agent gets only the draft file, not the drafter's notes, and checks it against the sources itself.
 8. **Rework.** Every blocking issue is corrected, weakened or removed, never "fixed" by citing a paper that was not retrieved. A fresh verifier runs again. At most 2 rounds.

@@ -4,7 +4,7 @@ A Claude Code plugin and MCP server for searching Scopus and fetching ScienceDir
 
 > **Unofficial.** Not affiliated with or endorsed by Elsevier or Universiti Teknologi Malaysia. Content you fetch is governed by Elsevier's terms and your institution's licence: do not share or redistribute it.
 
-**Status: 0.6.** Search, free-source abstracts and open-access downloads are tested live; Elsevier full text is tested with mocks only so far (it needs a campus network or insttoken).
+**Status: 0.7.** Search, free-source abstracts and open-access downloads are tested live; Elsevier full text is tested with mocks only so far (it needs a campus network or insttoken).
 
 ## Quick start (Claude Code)
 
@@ -119,6 +119,18 @@ a claim -> source verification table and any problem still unresolved.
 | `download_pdf` | one PDF: open-access copy first (not counted), else Elsevier if entitled | **yes** (Elsevier only) |
 | `download_batch` | up to 5 PDFs one after another; stops at the first limit refusal | **yes** (Elsevier only) |
 | `export_references` | BibTeX, RIS (EndNote / Zotero / Mendeley) or CSV for up to 100 DOIs | no |
+| `queue_papers` | queue up to 200 DOIs for the background worker (below) | the worker's fetches do |
+| `queue_status` | progress of the queue: done, waiting, blocked, to open by hand | no |
+
+### Fetch many papers in the background
+
+Queue the papers (ask Claude to *"queue all of them"*), then start the worker **in its own terminal window**. It keeps running after the chat ends:
+
+```
+uvx --from git+https://github.com/danialkamarolzaman/elsevier-research-mcp-utm elsevier-research-mcp-utm worker
+```
+
+It fetches one paper at a time, headless, until the queue is empty: open-access copies first (not counted), then Elsevier through the official API when your network or insttoken is entitled, inside the limits below. It sleeps until the next allowed time, stops for the day at the daily cap, and starts again by itself when you reach campus Wi-Fi. It never logs in to EZproxy: anything it cannot get goes to `_open_manually.md` in the download folder, with EZproxy links to open yourself, one at a time. Save those PDFs under the name given and the worker picks them up. Ctrl+C stops it; nothing is lost.
 
 Details and inputs: [docs/tools.md](docs/tools.md).
 
