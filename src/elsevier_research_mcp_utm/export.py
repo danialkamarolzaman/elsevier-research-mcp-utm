@@ -80,8 +80,8 @@ def to_ris(papers):
 
 
 # ---------------- csv ----------------
-def write_csv(papers, path):
-    with open(path, 'w', newline='', encoding='utf-8-sig') as f:  # bom so Excel reads utf-8
+def write_csv(papers, path, mode='w'):
+    with open(path, mode, newline='', encoding='utf-8-sig') as f:  # bom so Excel reads utf-8
         w = csv.DictWriter(f, fieldnames=csv_columns, extrasaction='ignore')
         w.writeheader()
         for p in papers:
@@ -89,6 +89,19 @@ def write_csv(papers, path):
 
 
 # ---------------- tool ----------------
+def safe_path(path, fmt):
+    # the path may come from an assistant: force the format's extension and never overwrite a file
+    ext = formats[fmt]
+    path = os.path.abspath(os.path.expanduser(path))
+    if not path.lower().endswith(ext):
+        path += ext
+    stem, n = path[:-len(ext)], 2
+    while os.path.exists(path):
+        path = f'{stem} ({n}){ext}'
+        n += 1
+    return path
+
+
 def export_references(dois, fmt='bibtex', path=None):
     if fmt not in formats:
         raise ValueError(f'format must be one of {sorted(formats)}')
@@ -108,12 +121,13 @@ def export_references(dois, fmt='bibtex', path=None):
     if not path:
         os.makedirs(config.download_dir, exist_ok=True)
         path = os.path.join(config.download_dir, f"references_{time.strftime('%Y%m%d-%H%M%S')}{formats[fmt]}")
-    os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
+    path = safe_path(path, fmt)
+    os.makedirs(os.path.dirname(path), exist_ok=True)
     if fmt == 'csv':
-        write_csv(papers, path)
+        write_csv(papers, path, mode='x')  # 'x' fails rather than overwrite
     else:
         text = to_bibtex(papers) if fmt == 'bibtex' else to_ris(papers)
-        with open(path, 'w', encoding='utf-8', newline='\n') as f:
+        with open(path, 'x', encoding='utf-8', newline='\n') as f:
             f.write(text)
-    return {'path': os.path.abspath(path), 'format': fmt, 'exported': len(papers),
+    return {'path': path, 'format': fmt, 'exported': len(papers),
             'missing_metadata': missing}

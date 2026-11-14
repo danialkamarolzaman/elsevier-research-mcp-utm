@@ -59,4 +59,4 @@ Up to 5 DOIs (`ERM_MAX_ARTICLES_PER_WINDOW`), one after another, with the minimu
 
 ## export_references
 
-Up to 100 DOIs to `bibtex`, `ris` (EndNote / Zotero / Mendeley) or `csv`. Metadata comes from the same sources as `get_abstract` (cached, never counted). Optional `path`; default `ERM_DOWNLOAD_DIR/references_<time>.<ext>`.
+Up to 100 DOIs to `bibtex`, `ris` (EndNote / Zotero / Mendeley) or `csv`. Metadata comes from the same sources as `get_abstract` (cached, never counted). Optional `path`; default `ERM_DOWNLOAD_DIR/references_<time>.<ext>`. It never overwrites a file: the format's extension is added if missing, and an existing name gets ` (2)`, ` (3)`, ...

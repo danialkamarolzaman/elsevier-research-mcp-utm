@@ -118,7 +118,8 @@ def download_batch(dois: list[str], prefer_open_access: bool = True) -> dict:
 @mcp.tool(description=(
     'Write a reference file for a list of DOIs (up to 100): bibtex (.bib), ris (.ris, for EndNote, Zotero, '
     'Mendeley) or csv (.csv, opens in Excel, includes abstracts where known). Metadata comes from the same '
-    'cached lookup as get_abstract. Default path: the download folder, timestamped. '
+    'cached lookup as get_abstract. Default path: the download folder, timestamped. Never overwrites a file: '
+    'the format extension is added if missing, and an existing name gets " (2)", " (3)", ... '
     'Does not count toward download limits.'))
 def export_references(
     dois: list[str], format: Literal['bibtex', 'ris', 'csv'] = 'bibtex', path: str | None = None,

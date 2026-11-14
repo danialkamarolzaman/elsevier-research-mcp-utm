@@ -76,3 +76,16 @@ def test_export_rejects_bad_input():
         export.export_references([], 'csv')
     with pytest.raises(ValueError):
         export.export_references([f'10.1/{i}' for i in range(101)], 'csv')
+
+
+def test_export_never_overwrites_and_forces_extension(tmp_path):
+    target = tmp_path / '.bashrc'
+    target.write_text('keep me', encoding='utf-8')
+    assert export.safe_path(str(target), 'bibtex') == str(target) + '.bib'
+    bib = tmp_path / 'refs.bib'
+    bib.write_text('old', encoding='utf-8')
+    assert export.safe_path(str(bib), 'bibtex') == str(tmp_path / 'refs (2).bib')
+    (tmp_path / 'refs (2).bib').write_text('old', encoding='utf-8')
+    assert export.safe_path(str(bib), 'bibtex') == str(tmp_path / 'refs (3).bib')
+    assert export.safe_path(str(tmp_path / 'list.CSV'), 'csv') == str(tmp_path / 'list.CSV')
+    assert target.read_text(encoding='utf-8') == 'keep me'

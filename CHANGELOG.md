@@ -16,6 +16,9 @@
 - Docs: `docs/` (setup, tools, access tiers, institutional access with an insttoken request template,
   research workflow, troubleshooting); shorter README.
 - `CONTRIBUTING.md`, `SECURITY.md` (private vulnerability reporting), issue and PR templates.
+- Security: `export_references` no longer overwrites existing files. A `path` from the assistant
+  (possibly steered by text inside a paper) could replace any file the user can write, e.g. a shell
+  profile. The format's extension is now forced and an existing name gets ` (2)`, ` (3)`, ...
 
 ## 0.5.0 (unreleased)
 
