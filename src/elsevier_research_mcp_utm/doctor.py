@@ -21,7 +21,7 @@ def run(doi=None):
     report = {
         'version': __version__,
         'api_key_set': bool(config.api_key),
-        'api_key_source': config.source('ELSEVIER_API_KEY') if config.api_key else 'none',  # env, file, none
+        'api_key_source': config.source('ELSEVIER_API_KEY') if config.api_key else 'none',
         'api_key_valid': None,
         'insttoken_set': bool(config.insttoken),
         'insttoken_source': config.source('ELSEVIER_INSTTOKEN') if config.insttoken else 'none',
@@ -41,9 +41,11 @@ def run(doi=None):
     }
     if not config.api_key:
         report['advice'].append(
-            'No ELSEVIER_API_KEY found (get one at https://dev.elsevier.com). Put the line '
-            f'ELSEVIER_API_KEY=<your key> in {config.config_file} (works in every app, including the '
-            'Claude desktop app), or set it as an environment variable. Then restart the app.')
+            'No ELSEVIER_API_KEY found (get one at https://dev.elsevier.com). Easiest: run '
+            '"elsevier-research-mcp-utm setup" in a terminal (hidden input, checks the key, saves it). '
+            f'Or put the line ELSEVIER_API_KEY=<your key> in {config.config_file} (works in every app, '
+            'including the Claude desktop app), or enter it in the Claude Code plugin settings, '
+            'or set it as an environment variable. Then restart the app.')
         return report
     # 1 key works?
     try:
@@ -51,6 +53,11 @@ def run(doi=None):
     except client.ApiError as e:
         report['api_key_valid'] = False if e.status == 401 else None
         report['notes'].append(f'test search failed: {e}')
+        if e.status == 401:
+            report['advice'].append(
+                f"The key from {report['api_key_source']} was rejected. Fix it there "
+                '(env = environment variable, plugin = Claude Code plugin settings, file = config file), '
+                'or run "elsevier-research-mcp-utm setup".')
         return report
     report['api_key_valid'] = True
     report['tier'] = 'metadata'

@@ -1,0 +1,63 @@
+name: Bug report
+description: Something does not work as described
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Never paste an API key or insttoken.** `doctor` output does not contain them, but check before posting.
+        Security problems (key leaks, limit bypasses): do not use this form, see SECURITY.md.
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Output of `elsevier-research-mcp-utm version`, or the plugin version
+      placeholder: 0.6.0
+    validations:
+      required: true
+  - type: dropdown
+    id: client
+    attributes:
+      label: Client
+      options:
+        - Claude Code (terminal, plugin)
+        - Claude Code (terminal, claude mcp add)
+        - Claude desktop app
+        - Cursor
+        - VS Code
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: Operating system
+      placeholder: Windows 11 / macOS 15 / Ubuntu 24.04
+    validations:
+      required: true
+  - type: textarea
+    id: doctor
+    attributes:
+      label: doctor output
+      description: Run `elsevier-research-mcp-utm doctor` (or ask Claude to "check my Elsevier access") and paste the result.
+      render: text
+  - type: textarea
+    id: steps
+    attributes:
+      label: What you did
+      description: The tool or prompt you used, with inputs. DOIs are fine; do not paste full text of papers.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected and what happened
+    validations:
+      required: true
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checks
+      options:
+        - label: I removed any API key, insttoken and personal data from this report
+          required: true

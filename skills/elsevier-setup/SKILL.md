@@ -9,26 +9,29 @@ Goal: the user ends with a working API key, knows their access tier, and knows t
 
 ## Rules
 
-- **Never ask the user to paste an API key or insttoken into the chat.** Keys go into environment variables only. If the user pastes one anyway, tell them it is now in the conversation history and suggest regenerating it at dev.elsevier.com.
+- **Never ask the user to paste an API key or insttoken into the chat.** Keys go into the plugin settings prompt, the `setup` command (run by the user in their own terminal), the config file or environment variables. If the user pastes one anyway, tell them it is now in the conversation history and suggest regenerating it at dev.elsevier.com.
 - Never print a key, even partly.
 - Do not change the download limits to higher values unless the user says their library allows it.
 
 ## Steps
 
-1. **Check.** Call `check_access`. Read `api_key_set`, `api_key_source` (env, file or none), `api_key_valid`, `config_file`, `config_file_found`, `tier`, `quota`, `limits`, `advice`, `config_problems`.
-2. **No key** (`api_key_set` false): tell the user to
-   - create a key at <https://dev.elsevier.com> (sign in, "Create API Key", any label and website), then
-   - save it in the **config file** at the exact `config_file` path that `check_access` returned. This works in every host, including the Claude desktop app, which does not pass shell or launchd environment variables to plugin servers. The user runs these themselves (never put the key into a command you run):
-     - macOS / Linux:
-       ```
-       mkdir -p ~/.config/elsevier-research-mcp-utm
-       printf 'ELSEVIER_API_KEY=%s\n' 'PASTE-KEY-HERE' > ~/.config/elsevier-research-mcp-utm/.env
-       chmod 600 ~/.config/elsevier-research-mcp-utm/.env
-       ```
-     - Windows: create `%APPDATA%\elsevier-research-mcp-utm\.env` in Notepad with the line `ELSEVIER_API_KEY=PASTE-KEY-HERE`.
-   - Alternative where the host passes the environment through (Claude Code in a terminal): environment variable `ELSEVIER_API_KEY`. It wins over the file.
+1. **Check.** Call `check_access`. Read `api_key_set`, `api_key_source` (env, plugin, file or none), `api_key_valid`, `config_file`, `config_file_found`, `tier`, `quota`, `limits`, `advice`, `config_problems`.
+2. **No key** (`api_key_set` false): tell the user to create a key at <https://dev.elsevier.com> (sign in, "Create API Key", any label and website). This step is theirs; it cannot be automated. Then offer the ways to save it, easiest first:
+   - **Claude Code plugin settings**: disable and re-enable the plugin (`/plugin`), and Claude Code asks for the key with hidden input and stores it in the system credential store.
+   - **`setup` command**, which the user runs **in their own terminal window** (not via you, not with `!`: it needs a real terminal for hidden input). It opens the key page, checks the key with one Scopus search, and saves it to the config file:
+     ```
+     uvx --from git+https://github.com/danialkamarolzaman/elsevier-research-mcp-utm elsevier-research-mcp-utm setup
+     ```
+   - **Config file**, by hand, at the exact `config_file` path that `check_access` returned (works in every host, including the Claude desktop app, which does not pass shell environment variables to plugin servers). macOS / Linux:
+     ```
+     mkdir -p ~/.config/elsevier-research-mcp-utm
+     printf 'ELSEVIER_API_KEY=%s\n' 'PASTE-KEY-HERE' > ~/.config/elsevier-research-mcp-utm/.env
+     chmod 600 ~/.config/elsevier-research-mcp-utm/.env
+     ```
+     Windows: create `%APPDATA%\elsevier-research-mcp-utm\.env` in Notepad with the line `ELSEVIER_API_KEY=PASTE-KEY-HERE`.
+   - **Environment variable** `ELSEVIER_API_KEY`, where the host passes the environment through (Claude Code started from a terminal).
+   - Order of precedence: environment variable, then plugin settings, then config file. `api_key_source` says which one is in use (`env`, `plugin`, `file`). If the user fixed the key in one place but an older one higher up still wins, tell them to fix or remove that one.
    - Then fully quit and restart the app, and run `check_access` again.
-   - If `api_key_source` says `env` but the key is wrong, an old environment variable is overriding the file: remove it or fix it.
    - If `config_problems` mentions `chmod 600`, tell the user to run it.
 3. **Key rejected** (`api_key_valid` false): the key is mistyped, revoked or has a stray space. Have them copy it again from dev.elsevier.com.
 4. **Explain the tier** in plain words:

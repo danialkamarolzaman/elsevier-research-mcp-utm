@@ -6,6 +6,7 @@ usage = '''usage: elsevier-research-mcp-utm [mode]
 
 modes:
   serve     run the MCP server on stdio (default)
+  setup     first-time setup: save your API key (hidden input, checked first)
   doctor    check API key, access tier, quota and download limits
   version   print the version
 '''
@@ -16,6 +17,9 @@ def main():
     if mode == 'serve':
         from .server import mcp
         mcp.run()
+    elif mode == 'setup':
+        from . import keysetup
+        sys.exit(keysetup.run())
     elif mode == 'doctor':
         from . import doctor
         report = doctor.run()

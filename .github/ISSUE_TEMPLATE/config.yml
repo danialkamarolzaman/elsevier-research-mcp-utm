@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security problem
+    url: https://github.com/danialkamarolzaman/elsevier-research-mcp-utm/security/advisories/new
+    about: Report key leaks or limit bypasses privately
+  - name: Troubleshooting guide
+    url: https://github.com/danialkamarolzaman/elsevier-research-mcp-utm/blob/main/docs/troubleshooting.md
+    about: Common errors (401, 403, 429, limits, desktop app) and fixes

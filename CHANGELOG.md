@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.6.0 (unreleased)
+
+- Automated first-time key setup, two ways:
+  - Claude Code plugin settings (`userConfig`): the plugin asks for the API key and insttoken with hidden
+    input when it is enabled and keeps them in the system credential store, plus an optional OpenAlex
+    email. They reach the server as `ERM_PLUGIN_*`, so an empty field never hides a key already set in
+    the environment; unfilled `${user_config...}` placeholders are ignored.
+  - `elsevier-research-mcp-utm setup`: opens the Elsevier key page, takes the key with hidden input,
+    checks it with one Scopus search (not counted), retries up to 3 times, checks an optional insttoken,
+    saves to the config file keeping other lines (created private, `chmod 600`), asks before replacing a
+    saved key, warns when an env or plugin value wins, then runs `doctor`. Refuses without a real terminal.
+- Key precedence: environment variable, then plugin settings, then config file. `doctor` reports
+  `env`, `plugin`, `file` or `none`, and says where to fix a rejected key.
+- Docs: `docs/` (setup, tools, access tiers, institutional access with an insttoken request template,
+  research workflow, troubleshooting); shorter README.
+- `CONTRIBUTING.md`, `SECURITY.md` (private vulnerability reporting), issue and PR templates.
+
 ## 0.5.0 (unreleased)
 
 - `research-draft` skill: drafts a document grounded only in retrieved papers. Last 5 years from

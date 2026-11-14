@@ -57,11 +57,22 @@ config_file = config_file_path()
 file_values = read_env_file(config_file)
 
 
-# ---------------- readers: real env var wins, then config file, then default ----------------
-def _text(name, default='', keep_empty=False):
+def _unexpanded(value):
+    # a host that could not fill a placeholder may pass it through literally, e.g. '${user_config.x}'
+    return bool(re.fullmatch(r'\$\{[^}]*\}', value.strip()))
+
+
+# ---------------- readers: env var, then plugin setting, then config file, then default ----------------
+# the claude code plugin passes its prompted values as ERM_PLUGIN_* (not the real names), so an
+# empty plugin field never hides a key the user already set in the environment
+def _text(name, default='', keep_empty=False, plugin=None):
     raw = os.environ.get(name)
-    if raw is not None and (raw.strip() or keep_empty):
+    if raw is not None and not _unexpanded(raw) and (raw.strip() or keep_empty):
         sources[name] = 'env'
+        return raw.strip()
+    raw = os.environ.get(plugin) if plugin else None
+    if raw and raw.strip() and not _unexpanded(raw):
+        sources[name] = 'plugin'
         return raw.strip()
     if name in file_values:
         sources[name] = 'file'
@@ -96,9 +107,9 @@ def _default_cache_dir():
 
 
 # ---------------- api ----------------
-api_key = _text('ELSEVIER_API_KEY')  # required, from dev.elsevier.com
-insttoken = _text('ELSEVIER_INSTTOKEN')  # optional, from your library
-openalex_mailto = _text('OPENALEX_MAILTO')  # optional, OpenAlex polite pool
+api_key = _text('ELSEVIER_API_KEY', plugin='ERM_PLUGIN_API_KEY')  # required, from dev.elsevier.com
+insttoken = _text('ELSEVIER_INSTTOKEN', plugin='ERM_PLUGIN_INSTTOKEN')  # optional, from your library
+openalex_mailto = _text('OPENALEX_MAILTO', plugin='ERM_PLUGIN_OPENALEX_MAILTO')  # optional, OpenAlex
 semantic_scholar_key = _text('SEMANTIC_SCHOLAR_API_KEY')  # optional, higher S2 rate limit
 base_url = 'https://api.elsevier.com'
 timeout = 30  # seconds per request

@@ -9,7 +9,8 @@ from conftest import load_fixture
 from elsevier_research_mcp_utm import config, doctor
 
 settings = ('ELSEVIER_API_KEY', 'ELSEVIER_INSTTOKEN', 'ERM_MAX_ARTICLES_PER_WINDOW', 'ERM_MAX_MB_PER_WINDOW',
-            'ERM_WINDOW_MINUTES', 'ERM_MAX_ARTICLES_PER_DAY', 'ERM_MIN_DELAY_SECONDS', 'ERM_PROXY_HOST')
+            'ERM_WINDOW_MINUTES', 'ERM_MAX_ARTICLES_PER_DAY', 'ERM_MIN_DELAY_SECONDS', 'ERM_PROXY_HOST',
+            'ERM_PLUGIN_API_KEY', 'ERM_PLUGIN_INSTTOKEN', 'ERM_PLUGIN_OPENALEX_MAILTO')
 
 
 @pytest.fixture
@@ -73,6 +74,34 @@ def test_empty_env_falls_back_to_file(cfg_file, monkeypatch):
     cfg_file.write_text('ELSEVIER_API_KEY=from_file\n', encoding='utf-8')
     c = reload_with(monkeypatch, ELSEVIER_API_KEY='  ')
     assert c.api_key == 'from_file'
+
+
+# ---------------- claude code plugin settings ----------------
+def test_plugin_value_used(cfg_file, monkeypatch):
+    c = reload_with(monkeypatch, ERM_PLUGIN_API_KEY='pluginkey', ERM_PLUGIN_INSTTOKEN='plugintok')
+    assert c.api_key == 'pluginkey' and c.source('ELSEVIER_API_KEY') == 'plugin'
+    assert c.insttoken == 'plugintok'
+
+
+def test_env_wins_over_plugin_and_plugin_over_file(cfg_file, monkeypatch):
+    cfg_file.write_text('ELSEVIER_API_KEY=from_file\nELSEVIER_INSTTOKEN=tok_file\n', encoding='utf-8')
+    c = reload_with(monkeypatch, ELSEVIER_API_KEY='from_env', ERM_PLUGIN_API_KEY='from_plugin',
+                    ERM_PLUGIN_INSTTOKEN='tok_plugin')
+    assert c.api_key == 'from_env' and c.source('ELSEVIER_API_KEY') == 'env'
+    assert c.insttoken == 'tok_plugin' and c.source('ELSEVIER_INSTTOKEN') == 'plugin'
+
+
+def test_empty_or_unfilled_plugin_value_ignored(cfg_file, monkeypatch):
+    cfg_file.write_text('ELSEVIER_API_KEY=from_file\n', encoding='utf-8')
+    c = reload_with(monkeypatch, ERM_PLUGIN_API_KEY='${user_config.elsevier_api_key}',
+                    ERM_PLUGIN_INSTTOKEN='')
+    assert c.api_key == 'from_file' and c.source('ELSEVIER_API_KEY') == 'file'
+    assert c.insttoken == ''
+
+
+def test_unfilled_placeholder_in_real_env_ignored(cfg_file, monkeypatch):
+    c = reload_with(monkeypatch, ELSEVIER_API_KEY='${user_config.elsevier_api_key}')
+    assert c.api_key == '' and c.source('ELSEVIER_API_KEY') == 'none'
 
 
 def test_empty_proxy_in_file(cfg_file):
