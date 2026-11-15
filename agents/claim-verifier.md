@@ -27,7 +27,11 @@ You receive the path of a Markdown draft. It contains in-text citations in IEEE 
 
 ## Checks
 
-1. **References.** For every reference, call `get_abstract` with its DOI.
+0. **Exact tool checks first** (plain lookups and text matching, no judgement):
+   - Call `verify_references` with the draft path. `NOT_FOUND` → `FAKE_REFERENCE`; `MISMATCH` → `METADATA_MISMATCH` with the `found` values. `LOOKUP_FAILED` is not proof of anything: re-check that DOI with `get_abstract`.
+   - Call `check_quotes` with the draft path. A quote in the draft's Verification table that is `NOT_FOUND` in its cited source → `FABRICATED_QUOTE` (the drafter quoted words the paper does not contain). `NO_SOURCE` → `CITATION_ERROR`.
+   - Include both tool verdicts and counts in your report. Your own checks below must not contradict them.
+1. **References.** For every reference, call `get_abstract` with its DOI (if step 0 did not already cover it).
    - DOI not found anywhere → `FAKE_REFERENCE`.
    - Title, first author, year or journal differ from the tool result → `METADATA_MISMATCH` (give the correct values).
 2. **Citation integrity.** Every [n] in the text has a reference entry; every reference is cited at least once; numbers follow order of first appearance (IEEE). Problems → `CITATION_ERROR`.
@@ -46,6 +50,7 @@ Return exactly this structure:
 ```
 VERDICT: PASS | FAIL
 Blocking issues: <n>   Partial: <n>   Uncheckable: <n>   Claims checked: <n>   References checked: <n>
+verify_references: PASS|FAIL (<counts>)   check_quotes: PASS|FAIL (<counts>)
 
 | # | Location (section / sentence start) | Claim (short) | Cites | Verdict | Evidence (short quote from source, or what the source says instead) | Fix |
 |---|---|---|---|---|---|---|
@@ -56,6 +61,7 @@ Reference problems:
 ```
 
 - List every claim that is not `SUPPORTED`. `SUPPORTED` claims are counted but need not be listed.
-- **Blocking** = `FAKE_REFERENCE`, `METADATA_MISMATCH`, `CITATION_ERROR`, `UNCITED_CLAIM`, `UNSUPPORTED`, `CONTRADICTED`, `NUMBER_MISMATCH`, `MISLABELED`. `VERDICT: PASS` only when there are zero blocking issues.
+- **Blocking** = `FAKE_REFERENCE`, `METADATA_MISMATCH`, `CITATION_ERROR`, `UNCITED_CLAIM`, `UNSUPPORTED`, `CONTRADICTED`, `NUMBER_MISMATCH`, `MISLABELED`, `FABRICATED_QUOTE`. `VERDICT: PASS` only when there are zero blocking issues and both tool checks pass.
 - Each `Fix` is concrete: the corrected wording, the right number, "weaken to ...", "remove", or "cite [n] instead".
 - Keep quotes short (one sentence at most); do not reproduce long passages of licensed text.
+- **Your own evidence is checked too.** In the Evidence column put words copied from the source inside "double quotes", exactly as the source writes them, and your own words outside the quotes. The caller runs `check_quotes` on your report; any quote it cannot find in the cited source is treated as invented by you and that row is overruled. If you cannot find a passage, write the verdict `UNCHECKABLE` or `UNSUPPORTED` without a quote rather than paraphrasing inside quotes.

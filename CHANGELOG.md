@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.8.0 (unreleased)
+
+- Anti-hallucination checks that use no AI judgement:
+  - `verify_references` tool: reads the reference list of a `.md`, `.txt`, `.docx` or `.pdf` file (or takes
+    DOIs), confirms each DOI exists and that the title, first author and year written match the real record
+    (journal advisory only). Entries without a DOI are searched in Scopus by title. Also lists DOIs used in
+    the text but missing from the references. A service outage is `LOOKUP_FAILED`, never "fake".
+  - `check_quotes` tool: every "quoted" passage in a draft's verification table or a verifier report must
+    appear in the cited paper's abstract, cached full text or local PDF (ignores case, spacing,
+    punctuation and line-break hyphens; `...` allowed). Never downloads.
+  - New dependency `pypdf` to read PDF text locally.
+- `verify-sources` skill: fact-check any draft, thesis chapter, pasted text or earlier answer with both tools
+  plus the `claim-verifier` agent; writes `<file>-verify.md`, never edits the file.
+- `grounded-answers` skill: rules for chat answers (no paper, DOI or number without a tool result in the
+  session, [AB]/[FT]/[META] labels, "not found in the retrieved sources", Sources used list).
+- `claim-verifier` runs both tools first, adds `FABRICATED_QUOTE`, and must put source words in quotes so
+  its own evidence is checked. `research-draft` requires verbatim quotes in the verification table and
+  PASS from both tools; `literature-review` adds a "DOI verified" column.
+
 ## 0.7.0 (unreleased)
 
 - Background fetch queue: `queue_papers` (up to 200 DOIs) and `queue_status` tools, and an

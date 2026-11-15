@@ -28,8 +28,13 @@ The `research-draft` skill (Claude Code plugin) writes a draft from real papers 
 | factual sentence with no citation | `UNCITED_CLAIM` |
 | every number, exactly, with units | `NUMBER_MISMATCH` |
 | `[FT]` used where only the abstract was read | `MISLABELED` |
+| a quoted "supporting passage" is not in the source (`check_quotes`) | `FABRICATED_QUOTE` |
 
-The verdict is `PASS` only with zero blocking issues. The verifier is read-only: it never downloads anything new, so it cannot use up your download limits. It re-reads full text only from the cache or from PDFs already saved.
+Before and after the agent, two exact tools run that use no AI judgement, so they cannot hallucinate themselves: `verify_references` (each DOI exists and matches the title, first author and year written) and `check_quotes` (each quoted passage, in the draft **and** in the verifier's own report, really appears in the cited paper's abstract, cached full text or PDF). A verifier quote that is not in the source is overruled and that claim re-checked.
+
+To check text that was not made by `research-draft`, for example your own thesis chapter, ask *"verify the references and claims in chapter2.docx"*: the `verify-sources` skill runs the same checks and writes a report without editing your file.
+
+The verdict is `PASS` only with zero blocking issues and both tool checks passing. The verifier is read-only: it never downloads anything new, so it cannot use up your download limits. It re-reads full text only from the cache or from PDFs already saved.
 
 ## Reading a verify report
 

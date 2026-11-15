@@ -2,7 +2,7 @@ from typing import Literal
 
 from mcp.server.mcpserver import MCPServer
 
-from . import __version__, abstracts, client, config, doctor, export, fetch, fetchqueue, worker
+from . import __version__, abstracts, client, config, doctor, export, fetch, fetchqueue, verify, worker
 from .sources import scopus
 
 mcp = MCPServer(
@@ -146,6 +146,34 @@ def queue_papers(dois: list[str]) -> dict:
     running = fetchqueue.worker_active()
     return {**result, 'worker_running': running, 'download_dir': config.download_dir,
             'start_worker': None if running else worker.start_command}
+
+
+@mcp.tool(description=(
+    'Anti-hallucination check of a reference list, by plain lookup (no AI judgement). With path (.md, .txt, '
+    '.docx or .pdf): finds the References section, and for each entry looks its DOI up (Elsevier, OpenAlex) '
+    'and compares the title, first author, year and journal written there with the real record. Entries '
+    'without a DOI are searched in Scopus by their quoted title. With dois: just confirms each DOI exists '
+    'and returns its real metadata. Status per reference: OK, MISMATCH (correct values given), NOT_FOUND '
+    '(likely fake or mistyped), NO_DOI, LOOKUP_FAILED. Free: never fetches full text.'))
+def verify_references(path: str | None = None, dois: list[str] | None = None) -> dict:
+    try:
+        return verify.verify_references(path, dois)
+    except (client.ApiError, ValueError, OSError) as e:
+        return _error(e)
+
+
+@mcp.tool(description=(
+    'Anti-hallucination check of quotes, by exact text matching (no AI judgement). Reads a Markdown draft '
+    'or verifier report, takes every "double-quoted" text in a table column named quote or evidence, maps '
+    'the row citation [n] to a DOI via the Sources table or reference list, and checks the quote really '
+    'appears in that paper: its abstract, its cached ScienceDirect full text or its local PDF. Ignores '
+    'case, spacing, punctuation and line-break hyphens. Status per quote: FOUND, NOT_FOUND (fabricated or '
+    'paraphrased), SOURCE_UNAVAILABLE, NO_SOURCE, TOO_SHORT, NOT_A_QUOTE. Free: never downloads anything.'))
+def check_quotes(path: str) -> dict:
+    try:
+        return verify.check_quotes(path)
+    except (client.ApiError, ValueError, OSError) as e:
+        return _error(e)
 
 
 @mcp.tool(description=(

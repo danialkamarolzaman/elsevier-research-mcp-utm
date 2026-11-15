@@ -30,8 +30,9 @@ Full instructions, the config file, environment variables and other clients: **[
 The plugin adds:
 
 - the MCP server `elsevier` (tools below)
-- skills: `elsevier-setup` (first-run check), `literature-review` (search, screen, fetch, export within the limits), `research-draft` (grounded, verified drafts, see below)
+- skills: `elsevier-setup` (first-run check), `literature-review` (search, screen, fetch, export within the limits), `research-draft` (grounded, verified drafts, see below), `verify-sources` (fact-check any draft, thesis chapter or answer: *"verify the references in chapter2.docx"*), `grounded-answers` (no invented papers, DOIs or numbers in chat answers)
 - the `claim-verifier` agent, which fact-checks drafts independently
+- two exact anti-hallucination checks that use no AI judgement: `verify_references` (every DOI is real and matches its title, author and year) and `check_quotes` (every quoted passage really is in the cited paper)
 
 ## Research prompt: grounded drafts from real papers
 
@@ -121,6 +122,8 @@ a claim -> source verification table and any problem still unresolved.
 | `export_references` | BibTeX, RIS (EndNote / Zotero / Mendeley) or CSV for up to 100 DOIs | no |
 | `queue_papers` | queue up to 200 DOIs for the background worker (below) | the worker's fetches do |
 | `queue_status` | progress of the queue: done, waiting, blocked, to open by hand | no |
+| `verify_references` | checks a reference list (.md, .txt, .docx, .pdf) or DOIs: real DOI? title, first author, year match? | no |
+| `check_quotes` | checks every "quoted" evidence in a draft or verify report really appears in the cited paper | no |
 
 ### Fetch many papers in the background
 

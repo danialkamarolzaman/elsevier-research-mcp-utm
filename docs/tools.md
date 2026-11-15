@@ -14,6 +14,8 @@ The MCP server is called `elsevier`. Every tool returns JSON. Errors come back a
 | [`export_references`](#export_references) | no |
 | [`queue_papers`](#queue_papers) | the worker's institutional fetches do |
 | [`queue_status`](#queue_status) | no |
+| [`verify_references`](#verify_references) | no |
+| [`check_quotes`](#check_quotes) | no |
 
 ## check_access
 
@@ -86,3 +88,38 @@ It never logs in to EZproxy, never loads ScienceDirect web pages and never opens
 ## queue_status
 
 Counts per status, each paper with its PDF path when done, whether the worker is running, when the next institutional fetch is allowed, and the path of `_open_manually.md`. Free.
+
+## verify_references
+
+Exact check of a reference list, with no AI judgement: plain lookups and string comparison.
+
+| Input | Notes |
+|---|---|
+| `path` | a `.md`, `.txt`, `.docx` or `.pdf` file with a "References" (or "Bibliography") heading |
+| `dois` | instead of a file: a list of DOIs to confirm and get real metadata for |
+
+For each entry it looks up the DOI (Elsevier when entitled, OpenAlex, Semantic Scholar) and compares the title, first author and year written in the entry with the real record. The journal is compared too, but only as advice, because IEEE style abbreviates journal names. Entries with no DOI are searched in Scopus by their quoted title.
+
+| Status | Meaning |
+|---|---|
+| `OK` | the DOI exists and the entry matches it |
+| `MISMATCH` | title, first author or year differ: `problems` gives the correct values (blocking) |
+| `NOT_FOUND` | no record for the DOI: fake, mistyped or very new (blocking) |
+| `NO_DOI` | no DOI; `suggested_doi` when Scopus found the title |
+| `LOOKUP_FAILED` | a service did not answer; not evidence of anything |
+
+It also lists DOIs that appear in the text but not in the reference list.
+
+## check_quotes
+
+Exact check that quoted evidence is real. Give the `path` of a Markdown draft or verify report. In every table with a *quote* or *evidence* column and a *citation* / *cites* column, each text inside "double quotes" is looked for in the cited paper: its abstract, its full text already in the cache, and its PDF (from `pdf:<path>` in the Sources table, or one downloaded earlier). Case, spacing, punctuation, ligatures and line-break hyphens are ignored; `...` splits a quote into parts that must appear in order. Citation numbers are mapped to DOIs through the Sources table or the reference list.
+
+| Status | Meaning |
+|---|---|
+| `FOUND` | the words are in the source (`in` says which text) |
+| `NOT_FOUND` | not in any text of the cited paper: fabricated or paraphrased (blocking); `best_prefix_match` shows how much of the start matched |
+| `NO_SOURCE` | the citation number has no DOI in the file (blocking) |
+| `SOURCE_UNAVAILABLE` | no abstract, cached full text or PDF to check against |
+| `TOO_SHORT`, `NOT_A_QUOTE` | too short to prove anything, or no quoted text in the cell |
+
+It never downloads anything; PDFs are read locally with `pypdf`.
