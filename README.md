@@ -4,7 +4,9 @@ A Claude Code plugin and MCP server for searching Scopus and fetching ScienceDir
 
 > **Unofficial.** Not affiliated with or endorsed by Elsevier or Universiti Teknologi Malaysia. Content you fetch is governed by Elsevier's terms and your institution's licence: do not share or redistribute it.
 
-**Status: 0.7.** Search, free-source abstracts and open-access downloads are tested live; Elsevier full text is tested with mocks only so far (it needs a campus network or insttoken).
+**Status: 0.8.** Search, free-source abstracts, open-access downloads and the verify tools are tested live.
+
+> **UTM users: closed papers come through your browser.** Tested on campus Wi-Fi in November 2026, the ScienceDirect API refuses full text and UTM Library does not issue an insttoken. The plugin finds the papers and downloads every open-access copy; for closed ones **you log in to EZproxy in Chrome and Claude in Chrome downloads them one at a time** (`browser-fetch` skill), inside the library limits. Safari or other browsers: by hand. See **[closed papers through your browser](docs/manual-full-text.md)**.
 
 ## Quick start (Claude Code)
 
@@ -16,7 +18,7 @@ A Claude Code plugin and MCP server for searching Scopus and fetching ScienceDir
    /plugin install elsevier-research-mcp-utm@elsevier-research-mcp-utm
    ```
 
-3. When the plugin is enabled, Claude Code asks for your **API key** (hidden, kept in your system credential store), and optionally an insttoken and an email for OpenAlex. Never paste the key into the chat.
+3. When the plugin is enabled, Claude Code asks for your **API key** (hidden, kept in your system credential store), and optionally an insttoken (leave it empty at UTM) and an email for OpenAlex. Never paste the key into the chat.
 4. Restart Claude Code and ask: *"check my Elsevier access"*.
 
 Other MCP clients, or prefer a terminal? Run the setup command in your own terminal. It opens the key page, takes the key with hidden input, checks it, and saves it to a private config file:
@@ -30,7 +32,7 @@ Full instructions, the config file, environment variables and other clients: **[
 The plugin adds:
 
 - the MCP server `elsevier` (tools below)
-- skills: `elsevier-setup` (first-run check), `literature-review` (search, screen, fetch, export within the limits), `research-draft` (grounded, verified drafts, see below), `verify-sources` (fact-check any draft, thesis chapter or answer: *"verify the references in chapter2.docx"*), `grounded-answers` (no invented papers, DOIs or numbers in chat answers)
+- skills: `elsevier-setup` (first-run check), `literature-review` (search, screen, fetch, export within the limits), `research-draft` (grounded, verified drafts, see below), `verify-sources` (fact-check any draft, thesis chapter or answer: *"verify the references in chapter2.docx"*), `grounded-answers` (no invented papers, DOIs or numbers in chat answers), `browser-fetch` (closed papers through your logged-in Chrome, one at a time)
 - the `claim-verifier` agent, which fact-checks drafts independently
 - two exact anti-hallucination checks that use no AI judgement: `verify_references` (every DOI is real and matches its title, author and year) and `check_quotes` (every quoted passage really is in the cited paper)
 
@@ -120,6 +122,8 @@ a claim -> source verification table and any problem still unresolved.
 | `download_pdf` | one PDF: open-access copy first (not counted), else Elsevier if entitled | **yes** (Elsevier only) |
 | `download_batch` | up to 5 PDFs one after another; stops at the first limit refusal | **yes** (Elsevier only) |
 | `export_references` | BibTeX, RIS (EndNote / Zotero / Mendeley) or CSV for up to 100 DOIs | no |
+| `browser_fetch_start` | before a closed paper is opened in your browser: checks the limits, counts it, gives the EZproxy link | **yes** |
+| `browser_fetch_done` | after the browser download: checks the PDF, files it under a clean name, records its size | (counted at start) |
 | `queue_papers` | queue up to 200 DOIs for the background worker (below) | the worker's fetches do |
 | `queue_status` | progress of the queue: done, waiting, blocked, to open by hand | no |
 | `verify_references` | checks a reference list (.md, .txt, .docx, .pdf) or DOIs: real DOI? title, first author, year match? | no |
@@ -133,7 +137,7 @@ Queue the papers (ask Claude to *"queue all of them"*), then start the worker **
 uvx --from git+https://github.com/danialkamarolzaman/elsevier-research-mcp-utm elsevier-research-mcp-utm worker
 ```
 
-It fetches one paper at a time, headless, until the queue is empty: open-access copies first (not counted), then Elsevier through the official API when your network or insttoken is entitled, inside the limits below. It sleeps until the next allowed time, stops for the day at the daily cap, and starts again by itself when you reach campus Wi-Fi. It never logs in to EZproxy: anything it cannot get goes to `_open_manually.md` in the download folder, with EZproxy links to open yourself, one at a time. Save those PDFs under the name given and the worker picks them up. Ctrl+C stops it; nothing is lost.
+It fetches one paper at a time, headless, until the queue is empty: open-access copies first (not counted), then Elsevier through the official API when your network or insttoken is entitled (never at UTM), inside the limits below. It sleeps until the next allowed time, stops for the day at the daily cap, and starts again by itself when you reach campus Wi-Fi. It never logs in to EZproxy: anything it cannot get goes to `_open_manually.md` (ask Claude to download those through your browser, or open them yourself) in the download folder, with EZproxy links to open yourself, one at a time. Save those PDFs under the name given and the worker picks them up. Ctrl+C stops it; nothing is lost.
 
 Details and inputs: [docs/tools.md](docs/tools.md).
 
@@ -158,15 +162,16 @@ Users at other institutions should set these to their own library's rules. All s
 | Tier | What you get | How |
 |---|---|---|
 | metadata | titles, authors, DOI, citations, open-access papers, most non-Elsevier abstracts | any network, API key only |
-| fulltext | + Elsevier abstracts, ScienceDirect full text and PDFs | campus Wi-Fi, or an insttoken from your library |
+| fulltext | + Elsevier abstracts, ScienceDirect full text and PDFs | campus Wi-Fi or an insttoken, where your institution's API access allows it. **Not available at UTM**: use [your browser](docs/manual-full-text.md) |
 
-The tool is **headless only through the official APIs**: it never scrapes ScienceDirect or logs in to EZproxy. Each paper includes an EZproxy link you can open yourself. See [access tiers](docs/access-tiers.md) and [institutional access](docs/institutional-access.md) (with an insttoken request template).
+The tool is **headless only through the official APIs**: it never scrapes ScienceDirect or logs in to EZproxy. Each paper includes an EZproxy link you can open yourself, and PDFs you save are read by the verify tools. See [access tiers](docs/access-tiers.md) and [institutional access](docs/institutional-access.md) (with an insttoken request template).
 
 ## Documentation
 
 - [Setup](docs/setup.md): key, config file, other clients, updating
 - [Tools](docs/tools.md)
 - [Access tiers](docs/access-tiers.md)
+- [Closed papers through your browser](docs/manual-full-text.md): Claude in Chrome or by hand (UTM)
 - [Institutional access](docs/institutional-access.md): campus, insttoken, VPN, EZproxy
 - [Research workflow](docs/research-workflow.md): grounded drafts and the verifier
 - [Troubleshooting](docs/troubleshooting.md)

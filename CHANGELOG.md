@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.9.0
+
+- Closed papers through the user's browser. Tested on campus Wi-Fi in November 2026: the ScienceDirect
+  Article API refuses full text at UTM and UTM Library does not issue an insttoken, so closed papers now
+  come through the user's own logged-in browser session:
+  - `browser_fetch_start` tool: checks the institution limits, waits the minimum gap, counts the paper and
+    returns its EZproxy link and file name. `browser_fetch_done` tool: takes the newest PDF from the browser
+    downloads folder (or a given path), checks it is a real PDF, files it under a clean name, records its
+    size and marks the queue item done. New setting `ERM_BROWSER_DOWNLOADS`.
+  - `browser-fetch` skill: Claude in Chrome opens one paper at a time in one tab after the user logs in to
+    EZproxy; never types passwords or solves CAPTCHAs; stops at any limit or warning. Safari and other
+    browsers: by hand, then `browser_fetch_done`.
+- Docs: new `docs/manual-full-text.md` (closed papers through your browser) and `docs/README.md` index;
+  README, access tiers, institutional access, tools and troubleshooting updated for UTM.
+- `elsevier-setup` skill, `doctor` advice and worker messages point UTM users to the browser way instead of
+  an insttoken or campus Wi-Fi.
+
 ## 0.8.0 (unreleased)
 
 - Anti-hallucination checks that use no AI judgement:

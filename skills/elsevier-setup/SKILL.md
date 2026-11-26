@@ -38,8 +38,10 @@ Goal: the user ends with a working API key, knows their access tier, and knows t
    - `metadata`: search works; Elsevier abstracts and full text do not. Normal off-campus.
    - `abstracts`: Elsevier abstracts work; full text does not.
    - `fulltext`: everything works on this network.
-5. **If not `fulltext`**, give the options in this order:
-   1. Ask the library for an Elsevier **insttoken** linked to the key, then add `ELSEVIER_INSTTOKEN=...` to the same config file. UTM: libsupport@utm.my. Offer to draft the email (purpose, roughly how many papers, that the tool enforces the library's limits; never include the key itself).
+5. **If not `fulltext`**:
+   - **UTM users** (`proxy_url` on `ezproxy.utm.my`): do not suggest an insttoken or campus Wi-Fi. UTM issues no insttoken and the API refuses full text on campus too (tested November 2026). Explain the browser way (docs/manual-full-text.md): open-access copies come through the API; closed papers through the user's own logged-in browser, with the `browser-fetch` skill (Claude in Chrome, one paper at a time, `browser_fetch_start` / `browser_fetch_done`) or by hand in Safari or any browser. The user always logs in themselves.
+   - Other institutions, in this order:
+   1. Ask the library for an Elsevier **insttoken** linked to the key, then add `ELSEVIER_INSTTOKEN=...` to the same config file. Offer to draft the email (purpose, roughly how many papers, that the tool enforces the library's limits; never include the key itself).
    2. Use campus Wi-Fi. A VPN may not help: many university VPNs are split tunnel and Elsevier still sees the home IP.
    3. Meanwhile, open-access papers work everywhere (`find_open_access`, `download_pdf`).
 6. **Limits.** Show the `limits` line and explain: full text and PDFs from Elsevier count; searches, abstracts, open-access PDFs and exports do not. UTM defaults: 5 articles and 100 MB per 15 minutes, 20 per day, 10 s apart. Users at other institutions set `ERM_MAX_*` to their library's rules.

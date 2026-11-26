@@ -2,19 +2,21 @@
 
 Elsevier decides entitlement per request, from either the **IP address** the request comes from or an **insttoken** sent with your API key.
 
+> **UTM users:** neither option works at UTM. Tested on campus Wi-Fi in November 2026, the Article API refuses full text, and UTM Library does not issue an insttoken. Closed papers come through your own logged-in browser (Claude in Chrome or by hand): see **[closed papers through your browser](manual-full-text.md)**. The rest of this page is for other institutions.
+
 ## Option 1: campus network
 
-On campus Wi-Fi (or wired), requests come from the university's IP range and subscribed content works. Run `doctor` there: the tier should read `fulltext`.
+On campus Wi-Fi (or wired), requests come from the university's IP range and subscribed content may work, if your institution's API access is set up for it. Run `doctor` there: the tier should read `fulltext`. If it does not read `fulltext` on campus, the API is not enabled for your institution: ask your library, or use [closed papers through your browser](manual-full-text.md).
 
 ## Option 2: insttoken (works anywhere)
 
-An insttoken is issued by Elsevier to your institution and linked to **your** API key. Ask your library; at UTM write to **libsupport@utm.my**. Libraries are often careful with these, so explain what you need and how the tool protects their account.
+An insttoken is issued by Elsevier to your institution and linked to **your** API key. Ask your library whether they issue one (UTM does not). Libraries are often careful with these, so explain what you need and how the tool protects their account.
 
 Add it with `setup`, the Claude Code plugin settings, or the config file (`ELSEVIER_INSTTOKEN=...`). Never post it publicly or share it; treat it like a password.
 
 ### Email template
 
-Fill in the `{...}` parts and send it from your institutional email address. Do **not** include your API key.
+For libraries that issue insttokens. Fill in the `{...}` parts and send it from your institutional email address. Do **not** include your API key.
 
 ```text
 Subject: Request for an Elsevier API insttoken for text mining / research

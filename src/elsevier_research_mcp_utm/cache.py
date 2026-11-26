@@ -35,6 +35,13 @@ def log_fetch(doi, kind, nbytes, ts=None):
         db.execute('insert into fetch_log values (?, ?, ?, ?)', (ts or time.time(), doi, kind, int(nbytes)))
 
 
+def set_fetch_bytes(doi, kind, ts, nbytes):
+    # fill in the size of a fetch that was logged before its bytes were known
+    with connect() as db:
+        db.execute('update fetch_log set bytes = ? where doi = ? and kind = ? and ts = ?',
+                   (int(nbytes), doi, kind, ts))
+
+
 def fetches_since(ts):
     with connect() as db:
         sql = 'select ts, doi, kind, bytes from fetch_log where ts >= ? order by ts'

@@ -34,5 +34,5 @@ Goal: prove, for every reference and every factual claim, that it comes from a r
 
 ## Notes
 
-- Elsevier abstracts are often unavailable off-campus, so many claims come back `UNCHECKABLE`. Suggest campus Wi-Fi, an insttoken, or adding the PDFs (`queue_papers`), then re-running.
+- Elsevier abstracts are often unavailable off-campus, so many claims come back `UNCHECKABLE`. Suggest adding the PDFs (`queue_papers`; at UTM closed Elsevier PDFs come through the user's browser with the `browser-fetch` skill, see docs/manual-full-text.md), then re-running. Elsewhere, campus Wi-Fi or an insttoken may also help.
 - A thesis may cite books, standards or websites: `verify_references` reports them as `NO_DOI`; list them as "not checkable by these tools", not as wrong.

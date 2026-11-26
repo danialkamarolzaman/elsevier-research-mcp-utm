@@ -1,6 +1,6 @@
 {
   "name": "elsevier-research-mcp-utm",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "description": "Search Scopus, get abstracts, open-access and ScienceDirect full text through the official Elsevier APIs, with institution download limits built in (UTM Library defaults: 5 articles and 100 MB per 15 min). Unofficial. Needs uv and an Elsevier API key (asked when the plugin is enabled, or from the config file).",
   "author": {
     "name": "danialkamarolzaman",
@@ -27,7 +27,7 @@
     "elsevier_insttoken": {
       "type": "string",
       "title": "Elsevier insttoken (optional)",
-      "description": "Institution token from your library, for full text off-campus. Leave empty if you do not have one.",
+      "description": "Institution token from your library, for full text off-campus. Leave empty if you do not have one (UTM does not issue them).",
       "sensitive": true
     },
     "openalex_mailto": {

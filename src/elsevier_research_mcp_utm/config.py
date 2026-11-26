@@ -119,6 +119,8 @@ retries = 3  # on 429 throttle / 5xx
 cache_dir = _text('ERM_CACHE_DIR') or _default_cache_dir()
 download_dir = _text('ERM_DOWNLOAD_DIR') or os.path.abspath('papers')
 pdf_name = _text('ERM_PDF_NAME') or '{first_author} {year} - {title}'
+# where the user's browser saves downloads (browser-assisted fetch of closed papers)
+browser_downloads_dir = _text('ERM_BROWSER_DOWNLOADS') or os.path.join(os.path.expanduser('~'), 'Downloads')
 cache_days = _int('ERM_CACHE_DAYS', 30)  # search / abstract cache lifetime
 
 # ---------------- institution (UTM defaults) ----------------

@@ -52,7 +52,8 @@ def write_manual_list():
             os.remove(path)
         return None
     lines = ['# Papers to open yourself', '',
-             'The background worker cannot fetch these headless. Open each link in your browser, one at',
+             'The background worker cannot fetch these headless. Ask Claude to download them through your',
+             'logged-in browser (browser-fetch skill), or open each link in your browser yourself, one at',
              'a time, log in to the library if asked, and save the PDF into this folder under the name',
              'given. The worker picks them up on its next pass. Keep to the library rules: at most '
              f'{config.max_articles_per_window} articles and {config.max_mb_per_window} MB per '
@@ -62,7 +63,7 @@ def write_manual_list():
         path_, paper = expected_path(item['doi'])
         title = (paper.get('title') or item['doi']).replace('|', '/')
         link = paper.get('proxy_url') or paper.get('url') or f"https://doi.org/{item['doi']}"
-        why = 'waiting for campus Wi-Fi or an insttoken' if item['status'] == 'blocked' else item['note']
+        why = 'no Elsevier API access (UTM: always)' if item['status'] == 'blocked' else item['note']
         lines.append(f"| {n} | {title} ({item['doi']}) | {why} | [link]({link}) | "
                      f"`{os.path.basename(path_)}` |")
     os.makedirs(config.download_dir, exist_ok=True)
@@ -157,8 +158,8 @@ def run(say=print, until_blocked=False):
                     if access_back():
                         say('Access found (campus network or insttoken), fetching the blocked papers.')
                         continue
-                say(f'{len(fetchqueue.items("blocked"))} paper(s) wait for campus Wi-Fi or an insttoken; '
-                    f'list: {fetchqueue.manual_list_path()}')
+                say(f'{len(fetchqueue.items("blocked"))} paper(s) need Elsevier access; open them yourself '
+                    f'(UTM: always by hand): {fetchqueue.manual_list_path()}')
                 sleep_until(next_recheck, say)
                 continue
             path = write_manual_list()

@@ -2,7 +2,19 @@ from typing import Literal
 
 from mcp.server.mcpserver import MCPServer
 
-from . import __version__, abstracts, client, config, doctor, export, fetch, fetchqueue, verify, worker
+from . import (
+    __version__,
+    abstracts,
+    browserfetch,
+    client,
+    config,
+    doctor,
+    export,
+    fetch,
+    fetchqueue,
+    verify,
+    worker,
+)
 from .sources import scopus
 
 mcp = MCPServer(
@@ -136,6 +148,7 @@ def export_references(
     'when this network or an insttoken is entitled, always inside the institution limits (it sleeps until '
     'the next allowed time, stops for the day at the daily cap, and starts again by itself when access '
     'appears, e.g. on campus Wi-Fi). It never logs in to EZproxy: papers it cannot get go to a list the user '
+    'fetches with browser_fetch_start/done through their logged-in browser or '
     'opens by hand. The worker is a separate program the USER starts in their own terminal; tell them the '
     'command in "start_worker" if worker_running is false. Queueing itself fetches nothing.'))
 def queue_papers(dois: list[str]) -> dict:
@@ -146,6 +159,33 @@ def queue_papers(dois: list[str]) -> dict:
     running = fetchqueue.worker_active()
     return {**result, 'worker_running': running, 'download_dir': config.download_dir,
             'start_worker': None if running else worker.start_command}
+
+
+@mcp.tool(description=(
+    'Browser-assisted fetch of a closed (paywalled) paper, step 1 of 2. Use it when the API has no full-text '
+    'access (always at UTM) and the USER is logged in to EZproxy in their own browser. Checks the '
+    'institution limits, waits the minimum gap, counts the paper, and returns open_url (the EZproxy link) '
+    'and save_as. '
+    'Then open open_url in ONE browser tab (e.g. Claude in Chrome), download the PDF, and call '
+    'browser_fetch_done. Refused with next_allowed when a limit is reached: stop and tell the user. Never '
+    'type the user\'s password or solve a CAPTCHA; the user logs in. Follow the browser-fetch skill.'))
+def browser_fetch_start(doi: str) -> dict:
+    try:
+        return browserfetch.start(doi)
+    except (client.ApiError, ValueError) as e:
+        return _error(e)
+
+
+@mcp.tool(description=(
+    'Browser-assisted fetch, step 2 of 2: after the PDF was downloaded in the browser, finds the newest PDF '
+    'in the browser downloads folder (waits up to wait_seconds for the download to finish), or takes path, '
+    'checks it is a real PDF, moves it into the download folder under the save_as name, records its size '
+    'toward the limits and marks the paper done in the queue. The verify tools can then read it.'))
+def browser_fetch_done(doi: str, path: str | None = None, wait_seconds: int = 60) -> dict:
+    try:
+        return browserfetch.finish(doi, path, min(max(int(wait_seconds), 0), 300))
+    except (client.ApiError, ValueError, OSError) as e:
+        return _error(e)
 
 
 @mcp.tool(description=(

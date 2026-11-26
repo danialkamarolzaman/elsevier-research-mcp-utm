@@ -83,8 +83,9 @@ def run(doi=None):
     if report['tier'] != 'fulltext':
         report['advice'].append(
             'Full text needs a subscribed network: be on campus Wi-Fi, or ask your library for an '
-            'Elsevier insttoken (set ELSEVIER_INSTTOKEN). UTM: libsupport@utm.my. '
-            'A split-tunnel VPN may not help.')
+            'Elsevier insttoken (set ELSEVIER_INSTTOKEN). A split-tunnel VPN may not help. '
+            'UTM: neither works (no insttoken is issued, the API refuses full text on campus too); '
+            'open proxy_url in your browser and download by hand, see docs/manual-full-text.md.')
     if not report['abstracts']:
         report['advice'].append(
             'Abstracts fall back to OpenAlex and Semantic Scholar: good for open-access and most '

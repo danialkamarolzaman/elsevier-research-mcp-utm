@@ -85,6 +85,15 @@ Only one worker runs at a time, and a cross-process lock makes the worker and th
 
 It never logs in to EZproxy, never loads ScienceDirect web pages and never opens browser tabs: publishers' terms forbid automated downloading through the website, and doing it with your library login risks your institution account.
 
+## browser_fetch_start / browser_fetch_done
+
+For closed papers the API cannot fetch (always at UTM), through the user's own logged-in browser. The `browser-fetch` skill drives them with Claude in Chrome; see [closed papers through your browser](manual-full-text.md).
+
+- `browser_fetch_start(doi)`: refuses when a limit is reached (`next_allowed`); otherwise waits the minimum gap, counts the paper toward the limits and returns `open_url` (EZproxy link), `save_as` and `downloads_dir`. Calling it again within 30 minutes for the same paper does not count twice.
+- `browser_fetch_done(doi, path=None, wait_seconds=60)`: takes `path`, or the newest PDF that appeared in the browser downloads folder since the start (waiting for the download to finish). Refuses a file that is not a real PDF (`NOT_PDF`, e.g. a login page). Moves it into the download folder under a clean name, records its size and marks the queue item done.
+
+The browser downloads folder is `~/Downloads`; set `ERM_BROWSER_DOWNLOADS` if yours is elsewhere. Neither tool logs in, loads web pages or reads cookies: the user logs in, in their own browser.
+
 ## queue_status
 
 Counts per status, each paper with its PDF path when done, whether the worker is running, when the next institutional fetch is allowed, and the path of `_open_manually.md`. Free.
